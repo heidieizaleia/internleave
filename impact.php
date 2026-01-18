@@ -167,6 +167,22 @@ if ($selected_app_id) {
 
         .empty-state { text-align: center; color: #aaa; margin-top: 50px; }
 
+        /* LOGOUT MODAL */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6); backdrop-filter: blur(8px);
+            display: none; justify-content: center; align-items: center; z-index: 2000;
+        }
+        .modal-box {
+            background: white; padding: 40px; border-radius: 30px;
+            width: 90%; max-width: 400px; text-align: center;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.2);
+            animation: popIn 0.3s ease-out;
+        }
+        @keyframes popIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        .btn-yes { background: #ff6b6b; color: white; padding: 12px 30px; border:none; border-radius:10px; font-weight:700; cursor:pointer; margin-left:10px; }
+        .btn-no { background: #eee; color: #555; padding: 12px 30px; border:none; border-radius:10px; font-weight:700; cursor:pointer; }
+
         @media (max-width: 900px) { .main-wrapper { grid-template-columns: 1fr; } .control-panel { position: static; } }
     </style>
 </head>
@@ -183,8 +199,8 @@ if ($selected_app_id) {
             <a href="apply.php">Apply</a>
             <a href="status.php">Status</a>
             <a href="impact.php" class="active">Impact</a>
-            <a href="settings.php">Settings</a>
-            <a class="logout-link" onclick="window.location.href='index.php'">Logout</a>
+            <a href="history.php">History</a> <a href="profilesetting.php">Settings</a>
+            <a class="logout-link" onclick="openLogout()">Logout</a>
         </div>
     </nav>
 
@@ -288,6 +304,25 @@ if ($selected_app_id) {
         </div>
 
     </div>
+
+    <div class="modal-overlay" id="logoutModal">
+        <div class="modal-box">
+            <div style="font-size: 4rem; margin-bottom: 10px;">👋</div>
+            <h2 style="margin-top:0; color:#333;">Leaving so soon?</h2>
+            <p style="color:#666;">You will be logged out of your session.</p>
+            <div style="margin-top:20px;">
+                <button class="btn-no" onclick="closeLogout()">Cancel</button>
+                <button class="btn-yes" onclick="confirmLogout()">Logout</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function openLogout() { document.getElementById('logoutModal').style.display = 'flex'; }
+        function closeLogout() { document.getElementById('logoutModal').style.display = 'none'; }
+        function confirmLogout() { window.location.href = 'index.php'; }
+        window.onclick = function(e) { if(e.target == document.getElementById('logoutModal')) closeLogout(); }
+    </script>
 
 </body>
 </html>

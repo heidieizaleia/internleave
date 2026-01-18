@@ -38,7 +38,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $total_days = $interval->days + 1;
 
     // --- CRITICAL FIX: GET PLACEMENT ID ---
-    // We check if this student has a placement.
     $place_sql = "SELECT placement_id FROM internship_placements WHERE student_id = '$student_id' LIMIT 1";
     $place_res = $conn->query($place_sql);
 
@@ -46,20 +45,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $row = $place_res->fetch_assoc();
         $placement_id = $row['placement_id'];
     } else {
-        // --- AUTO-FIX: CREATE DUMMY PLACEMENT IF MISSING ---
-        // This ensures your code runs even if you haven't set up the placements table manually.
-        // It checks if supervisor/staff exist first to avoid foreign key errors there too.
-        
-        // Ensure dummy supervisor exists (ID 1)
+        // Auto-fix missing placement
         $conn->query("INSERT IGNORE INTO industry_supervisors (supervisor_id, supervisor_name, company_name) VALUES (1, 'Default Supervisor', 'Tech Co')");
-        // Ensure dummy staff exists (ID 1)
         $conn->query("INSERT IGNORE INTO staffs (staff_id, staff_name) VALUES (1, 'Default Staff')");
-        
-        // Create the Placement
         $insert_place = "INSERT INTO internship_placements (student_id, company_name, supervisor_id, staff_id, start_date, end_date) 
                          VALUES ('$student_id', 'Tech Company', 1, 1, '2024-01-01', '2024-06-01')";
         if ($conn->query($insert_place)) {
-            $placement_id = $conn->insert_id; // Get the new ID
+            $placement_id = $conn->insert_id;
         } else {
             die("<div class='alert error'>System Error: Could not create placement record. " . $conn->error . "</div>");
         }
@@ -76,7 +68,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 
     // INSERT LEAVE APPLICATION
-    // Note: We do NOT insert 'faculty_supervisor' because it is not in your schema.
     $sql = "INSERT INTO intern_leave_applications 
             (student_id, placement_id, leave_type, start_date, end_date, total_days, reason, supporting_doc_path, status)
             VALUES ('$student_id', '$placement_id', '$leave_type', '$start_date', '$end_date', '$total_days', '$reason', '$target_file', 'Pending')";
@@ -193,7 +184,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             <a href="apply.php" class="active">Apply</a>
             <a href="status.php">Status</a>
             <a href="impact.php">Impact</a>
-            <a href="settings.php">Settings</a>
+            <a href="history.php">History</a> <a href="profilesetting.php">Settings</a>
             <a class="logout-link" onclick="openLogout()">Logout</a>
         </div>
     </nav>

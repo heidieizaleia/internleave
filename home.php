@@ -280,7 +280,7 @@
             <a href="apply.php">Apply</a>
             <a href="status.php">Status</a>
             <a href="impact.php">Impact</a>
-            <a href="settings.php">Settings</a>
+            <a href="history.php">History</a> <a href="profilesetting.php">Settings</a>
             <a class="logout-link" onclick="openLogout()">Logout</a>
         </div>
     </nav>

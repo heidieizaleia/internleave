@@ -34,7 +34,6 @@ if (isset($_GET['cancel_id'])) {
 }
 
 // 4. FETCH DATA (READ CRUD)
-// We join with the Placement table to get the Company Name if needed, but simple select is fine for now.
 $sql = "SELECT * FROM intern_leave_applications WHERE student_id = '$student_id' ORDER BY submitted_at DESC";
 $result = $conn->query($sql);
 ?>
@@ -87,20 +86,12 @@ $result = $conn->query($sql);
 
         /* STATUS CARDS */
         .status-card {
-            background: white;
-            padding: 30px;
-            border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.03);
-            margin-bottom: 25px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-left: 10px solid #ccc;
-            position: relative;
-            overflow: hidden;
+            background: white; padding: 30px; border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.03); margin-bottom: 25px;
+            display: flex; justify-content: space-between; align-items: center;
+            border-left: 10px solid #ccc; position: relative; overflow: hidden;
         }
 
-        /* DYNAMIC BORDER COLORS */
         .card-Pending { border-left-color: var(--pending); }
         .card-Approved { border-left-color: var(--approved); }
         .card-Rejected { border-left-color: var(--rejected); }
@@ -109,19 +100,13 @@ $result = $conn->query($sql);
         .info .meta { color: #888; font-size: 0.9rem; margin-top: 5px; }
         .info .reason { margin-top: 10px; color: #555; background: #f9f9f9; padding: 10px; border-radius: 10px; display: inline-block; font-size: 0.95rem; }
 
-        .status-badge {
-            padding: 8px 20px; border-radius: 30px; font-weight: 700; font-size: 0.9rem; color: white; text-transform: uppercase; letter-spacing: 1px; text-align: center; width: 120px; display: block;
-        }
+        .status-badge { padding: 8px 20px; border-radius: 30px; font-weight: 700; font-size: 0.9rem; color: white; text-transform: uppercase; letter-spacing: 1px; text-align: center; width: 120px; display: block; }
         .bg-Pending { background: var(--pending); }
         .bg-Approved { background: var(--approved); }
         .bg-Rejected { background: var(--rejected); }
 
         .actions { text-align: right; margin-top: 15px; }
-        .btn-cancel {
-            background: #fff5f5; color: #ef4444; border: 1px solid #fee2e2;
-            padding: 8px 15px; border-radius: 10px; text-decoration: none; font-weight: 700; font-size: 0.85rem;
-            transition: 0.2s;
-        }
+        .btn-cancel { background: #fff5f5; color: #ef4444; border: 1px solid #fee2e2; padding: 8px 15px; border-radius: 10px; text-decoration: none; font-weight: 700; font-size: 0.85rem; transition: 0.2s; }
         .btn-cancel:hover { background: #ef4444; color: white; }
 
         .empty-state { text-align: center; padding: 60px; color: #aaa; }
@@ -145,13 +130,12 @@ $result = $conn->query($sql);
             <a href="apply.php">Apply</a>
             <a href="status.php" class="active">Status</a>
             <a href="impact.php">Impact</a>
-            <a href="settings.php">Settings</a>
+            <a href="history.php">History</a> <a href="profilesetting.php">Settings</a>
             <a class="logout-link" onclick="window.location.href='index.php'">Logout</a>
         </div>
     </nav>
 
     <div class="container">
-        
         <div class="page-header">
             <h1>Application History</h1>
             <a href="apply.php" class="btn-new">+ New Application</a>
@@ -161,11 +145,9 @@ $result = $conn->query($sql);
 
         <?php if ($result->num_rows > 0): ?>
             <?php while($row = $result->fetch_assoc()): ?>
-                
                 <div class="status-card card-<?php echo $row['status']; ?>">
                     <div class="info">
                         <h3><?php echo $row['leave_type']; ?></h3>
-                        
                         <div class="meta">
                             <i class="far fa-calendar-alt"></i> 
                             <?php echo date('d M Y', strtotime($row['start_date'])); ?> 
@@ -175,29 +157,22 @@ $result = $conn->query($sql);
                                 (<?php echo $row['total_days']; ?> Days)
                             </span>
                         </div>
-
-                        <div class="reason">
-                            "<?php echo $row['reason']; ?>"
-                        </div>
+                        <div class="reason">"<?php echo $row['reason']; ?>"</div>
                     </div>
-
                     <div style="min-width: 140px; text-align: right;">
                         <span class="status-badge bg-<?php echo $row['status']; ?>">
                             <?php echo $row['status']; ?>
                         </span>
-
                         <?php if($row['status'] == 'Pending'): ?>
                             <div class="actions">
                                 <a href="status.php?cancel_id=<?php echo $row['application_id']; ?>" 
-                                   class="btn-cancel"
-                                   onclick="return confirm('Are you sure you want to cancel this request?');">
+                                   class="btn-cancel" onclick="return confirm('Are you sure you want to cancel?');">
                                    <i class="fas fa-trash"></i> Cancel
                                 </a>
                             </div>
                         <?php endif; ?>
                     </div>
                 </div>
-
             <?php endwhile; ?>
         <?php else: ?>
             <div class="empty-state">
@@ -207,8 +182,6 @@ $result = $conn->query($sql);
                 <a href="apply.php" class="btn-new" style="margin-top:20px; display:inline-block;">Apply Now</a>
             </div>
         <?php endif; ?>
-
     </div>
-
 </body>
 </html>
