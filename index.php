@@ -220,25 +220,21 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             <input type="hidden" name="action" value="login">
             <div class="form-group">
                 <label>User ID (Student / Staff / Supervisor ID)</label>
-                <input type="number" name="login_id" placeholder="Enter ID" required>
+                <input type="text" inputmode="numeric" pattern="[0-9]*" name="login_id" placeholder="Enter ID" required>
             </div>
             <div class="form-group">
                 <label>Password</label>
                 <input type="password" name="password" placeholder="Enter Password" required>
             </div>
             <button type="submit" class="btn-submit">Login</button>
-            <p style="font-size: 0.8rem; color: #888; margin-top: 15px; text-align:center;">
-                Default Passwords: <br>
-                Student: <b>student123</b> | Supervisor: <b>supervisor123</b> | Staff: <b>staff123</b>
-            </p>
-        </form>
+            </form>
 
         <form id="registerForm" method="POST">
             <input type="hidden" name="action" value="register">
             
             <div class="form-group">
                 <label>Student ID</label>
-                <input type="number" name="student_id" placeholder="e.g. 2024881234" required>
+                <input type="text" inputmode="numeric" pattern="[0-9]*" name="student_id" placeholder="e.g. 2024881234" required>
             </div>
             
             <div class="form-group">
