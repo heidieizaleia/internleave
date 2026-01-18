@@ -5,14 +5,44 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Home | InternLeave Portal</title>
     <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300;500;700&display=swap" rel="stylesheet">
+    
+    <script>
+        (function() {
+            // Read settings from memory
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            const savedColor = localStorage.getItem('accentColor');
+
+            // Apply Dark Mode Class
+            document.documentElement.setAttribute('data-theme', savedTheme);
+
+            // Apply Custom Accent Color if it exists
+            if (savedColor) {
+                document.documentElement.style.setProperty('--pastel-green-dark', savedColor);
+                // Also tweak the gradient main color slightly to match
+                document.documentElement.style.setProperty('--pastel-green-main', savedColor); 
+            }
+        })();
+    </script>
+
     <style>
         :root {
+            /* Default Light Mode Colors */
             --pastel-green-light: #f1f8f6;
             --pastel-green-main: #a7d7c5;
-            --pastel-green-dark: #5c8d89;
+            --pastel-green-dark: #5c8d89; /* This will be overridden by the script */
             --white: #ffffff;
             --text-dark: #2d3436;
             --soft-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+            --card-bg: #ffffff; /* Added for card background control */
+        }
+
+        /* 2. DARK MODE CSS OVERRIDES */
+        [data-theme="dark"] {
+            --pastel-green-light: #1a1f1e; /* Dark Background */
+            --white: #252b2a;              /* Dark Nav/Header */
+            --text-dark: #e1f2eb;          /* Light Text */
+            --soft-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            --card-bg: #252b2a;            /* Dark Card Background */
         }
 
         * { box-sizing: border-box; font-family: 'Quicksand', sans-serif; transition: all 0.3s ease; }
@@ -40,7 +70,7 @@
 
         /* --- NAVIGATION --- */
         nav {
-            background: var(--white);
+            background: var(--white); /* Uses variable for Dark Mode compatibility */
             padding: 15px 40px;
             display: flex;
             justify-content: space-between;
@@ -51,14 +81,14 @@
             z-index: 1000;
         }
 
-        .logo-text { font-size: 2.4rem; font-weight: 700; letter-spacing: -2px; text-decoration: none; }
+        .logo-text { font-size: 2.4rem; font-weight: 700; letter-spacing: -2px; text-decoration: none; color: var(--text-dark); }
         .logo-text .intern { color: var(--pastel-green-dark); }
         .logo-text .leave { color: var(--pastel-green-main); font-weight: 300; }
 
         .nav-links { display: flex; gap: 8px; align-items: center; }
         .nav-links a {
             text-decoration: none;
-            color: #666;
+            color: #888;
             font-weight: 600;
             font-size: 0.8rem;
             padding: 10px 14px;
@@ -67,6 +97,12 @@
         .nav-links a:hover, .nav-links a.active {
             background: #e1f2eb;
             color: var(--pastel-green-dark);
+        }
+        
+        /* Dark Mode tweak for nav links hover */
+        [data-theme="dark"] .nav-links a:hover, 
+        [data-theme="dark"] .nav-links a.active {
+            background: rgba(255,255,255,0.1); 
         }
 
         .logout-link {
@@ -82,7 +118,7 @@
         .hero-banner {
             width: 100%;
             height: 500px;
-            background: linear-gradient(135deg, #a7d7c5 0%, #f1f8f6 50%, #d4ede4 100%);
+            background: linear-gradient(135deg, var(--pastel-green-main) 0%, var(--pastel-green-light) 100%);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -105,7 +141,7 @@
             font-weight: 700;
             margin: 0;
             letter-spacing: -3px;
-            background: linear-gradient(to right, #2d3436, #ffffff, #5c8d89, #2d3436);
+            background: linear-gradient(to right, var(--text-dark), var(--pastel-green-dark), var(--text-dark)); /* Updated for theme */
             background-size: 200% auto;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
@@ -114,7 +150,7 @@
         }
         @keyframes textShine { to { background-position: 200% center; } }
 
-        .hero-subtitle { font-size: 1.4rem; color: #333; font-weight: 500; margin-top: 15px; opacity: 0.8; }
+        .hero-subtitle { font-size: 1.4rem; color: var(--text-dark); font-weight: 500; margin-top: 15px; opacity: 0.8; }
 
         /* --- CONTENT SECTIONS --- */
         .container { max-width: 1100px; margin: 0 auto; padding: 80px 20px; }
@@ -127,7 +163,7 @@
             margin-bottom: 80px;
         }
         .card {
-            background: white;
+            background: var(--card-bg); /* Uses theme variable */
             padding: 40px;
             border-radius: 25px;
             box-shadow: var(--soft-shadow);
@@ -140,7 +176,7 @@
 
         /* 2. TIMELINE SECTION (UPDATED LOGIC) */
         .timeline-section {
-            background: white;
+            background: var(--card-bg); /* Uses theme variable */
             padding: 80px 20px;
             border-radius: 40px;
             margin-bottom: 80px;
@@ -160,15 +196,16 @@
         .timeline-steps::before {
             content: ''; position: absolute; top: 40px; left: 10%; right: 10%; height: 4px; background: #f0f0f0; z-index: 0;
         }
+        [data-theme="dark"] .timeline-steps::before { background: #3a4240; } /* Dark mode line */
         
         .step { position: relative; z-index: 1; width: 220px; }
         .step-circle {
             width: 80px; height: 80px; background: var(--pastel-green-light); color: var(--pastel-green-dark);
             border-radius: 50%; display: flex; align-items: center; justify-content: center;
-            font-size: 1.5rem; font-weight: 700; margin: 0 auto 20px; border: 4px solid white;
+            font-size: 1.5rem; font-weight: 700; margin: 0 auto 20px; border: 4px solid var(--card-bg);
             box-shadow: 0 5px 15px rgba(0,0,0,0.05);
         }
-        .step h4 { margin: 0; font-size: 1.1rem; }
+        .step h4 { margin: 0; font-size: 1.1rem; color: var(--text-dark); }
         .step p { font-size: 0.9rem; color: #999; margin-top: 5px; }
 
         /* 3. SPLIT SECTION */
@@ -185,8 +222,8 @@
             position: relative;
             overflow: hidden;
         }
-        .box-student { background: linear-gradient(135deg, #a7d7c5, #86efac); }
-        .box-supervisor { background: linear-gradient(135deg, #5c8d89, #3b6978); }
+        .box-student { background: linear-gradient(135deg, var(--pastel-green-main), #86efac); }
+        .box-supervisor { background: linear-gradient(135deg, var(--pastel-green-dark), #3b6978); }
         .split-box h3 { font-size: 2rem; margin-top: 0; }
         .split-box p { font-size: 1.1rem; opacity: 0.9; line-height: 1.6; }
         .overlay-icon { position: absolute; bottom: -20px; right: -20px; font-size: 10rem; opacity: 0.2; }
@@ -202,7 +239,11 @@
             text-align: center;
             margin-bottom: 80px;
         }
+        [data-theme="dark"] .stats-banner { background: var(--pastel-green-dark); color: #2d3436; } /* Invert for dark mode visibility */
+        
         .stat-item h2 { font-size: 3rem; margin: 0; color: var(--pastel-green-main); }
+        [data-theme="dark"] .stat-item h2 { color: white; }
+        
         .stat-item p { margin: 5px 0 0; opacity: 0.7; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; }
 
         /* 5. FAQ GRID */
@@ -215,7 +256,7 @@
             text-align: left;
         }
         .faq-item {
-            background: white;
+            background: var(--card-bg); /* Uses theme variable */
             padding: 30px;
             border-radius: 15px;
             box-shadow: 0 5px 15px rgba(0,0,0,0.03);
@@ -226,11 +267,12 @@
 
         /* FOOTER */
         footer {
-            background: white;
+            background: var(--white); /* Uses theme variable */
             padding: 60px 20px;
             text-align: center;
             border-top: 1px solid #eee;
         }
+        [data-theme="dark"] footer { border-top-color: #333; }
         .footer-links { margin-bottom: 20px; }
         .footer-links a { color: #888; text-decoration: none; margin: 0 15px; font-weight: 600; }
         .footer-links a:hover { color: var(--pastel-green-dark); }
@@ -242,7 +284,8 @@
             display: none; justify-content: center; align-items: center; z-index: 2000;
         }
         .modal-box {
-            background: white; padding: 40px; border-radius: 30px;
+            background: var(--card-bg); /* Uses theme variable */
+            padding: 40px; border-radius: 30px;
             width: 90%; max-width: 400px; text-align: center;
             box-shadow: 0 30px 60px rgba(0,0,0,0.2);
             animation: popIn 0.3s ease-out;
@@ -280,7 +323,8 @@
             <a href="apply.php">Apply</a>
             <a href="status.php">Status</a>
             <a href="impact.php">Impact</a>
-            <a href="history.php">History</a> <a href="profilesetting.php">Settings</a>
+            <a href="history.php">History</a>
+            <a href="profilesetting.php">Settings</a>
             <a class="logout-link" onclick="openLogout()">Logout</a>
         </div>
     </nav>
@@ -404,7 +448,7 @@
     <div class="modal-overlay" id="logoutModal">
         <div class="modal-box">
             <div style="font-size: 4rem; margin-bottom: 10px;">👋</div>
-            <h2 style="margin-top:0; color:#333;">Leaving so soon?</h2>
+            <h2 style="margin-top:0; color:var(--text-dark);">Leaving so soon?</h2>
             <p style="color:#666;">You will be logged out of your session.</p>
             <div style="margin-top:20px;">
                 <button class="btn-no" onclick="closeLogout()">Cancel</button>

@@ -70,8 +70,21 @@ if ($selected_app_id) {
     <title>Impact Analysis | InternLeave</title>
     <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            const savedColor = localStorage.getItem('accentColor');
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            if (savedColor) {
+                document.documentElement.style.setProperty('--pastel-green-dark', savedColor);
+                document.documentElement.style.setProperty('--pastel-green-main', savedColor);
+            }
+        })();
+    </script>
+
     <style>
-        /* --- THEME (MATCHING HOME/APPLY) --- */
+        /* CSS STYLES */
         :root {
             --pastel-green-light: #f1f8f6;
             --pastel-green-main: #a7d7c5;
@@ -79,9 +92,21 @@ if ($selected_app_id) {
             --white: #ffffff;
             --text-dark: #2d3436;
             --soft-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+            --input-bg: #fafafa;
+            --input-border: #eee;
         }
 
-        * { box-sizing: border-box; font-family: 'Quicksand', sans-serif; transition: all 0.3s ease; }
+        /* DARK MODE OVERRIDES */
+        [data-theme="dark"] {
+            --pastel-green-light: #1a1f1e;
+            --white: #252b2a;
+            --text-dark: #e1f2eb;
+            --soft-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            --input-bg: #2f3635;
+            --input-border: #3a4240;
+        }
+
+        * { box-sizing: border-box; font-family: 'Quicksand', sans-serif; transition: background-color 0.3s ease, color 0.3s ease; }
         body { margin: 0; padding: 0; background-color: var(--pastel-green-light); color: var(--text-dark); overflow-x: hidden; }
 
         /* MARQUEE & NAV */
@@ -90,12 +115,15 @@ if ($selected_app_id) {
         @keyframes marqueeMove { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
 
         nav { background: var(--white); padding: 15px 40px; display: flex; justify-content: space-between; align-items: center; box-shadow: var(--soft-shadow); position: sticky; top: 0; z-index: 1000; }
-        .logo-text { font-size: 2.2rem; font-weight: 700; letter-spacing: -2px; text-decoration: none; }
+        .logo-text { font-size: 2.2rem; font-weight: 700; letter-spacing: -2px; text-decoration: none; color: var(--text-dark); }
         .logo-text .intern { color: var(--pastel-green-dark); }
         .logo-text .leave { color: var(--pastel-green-main); font-weight: 300; }
+        
         .nav-links { display: flex; gap: 8px; align-items: center; }
         .nav-links a { text-decoration: none; color: #666; font-weight: 600; font-size: 0.8rem; padding: 10px 14px; border-radius: 12px; }
         .nav-links a:hover, .nav-links a.active { background: #e1f2eb; color: var(--pastel-green-dark); }
+        [data-theme="dark"] .nav-links a:hover, [data-theme="dark"] .nav-links a.active { background: rgba(255,255,255,0.1); }
+
         .logout-link { background: #ffeded !important; color: #ff6b6b !important; border: 1px solid #ffcccc; cursor: pointer; }
 
         /* LAYOUT */
@@ -106,7 +134,7 @@ if ($selected_app_id) {
 
         /* LEFT: SELECTOR & ADD FORM */
         .control-panel { 
-            background: white; padding: 30px; border-radius: 25px; 
+            background: var(--white); padding: 30px; border-radius: 25px; 
             box-shadow: var(--soft-shadow); height: fit-content; position: sticky; top: 100px; 
         }
         
@@ -114,30 +142,34 @@ if ($selected_app_id) {
         .control-panel p { color: #888; font-size: 0.9rem; margin-bottom: 20px; }
 
         select, input, textarea { 
-            width: 100%; padding: 12px; border: 2px solid #eee; border-radius: 12px; 
-            margin-bottom: 15px; font-family: inherit; outline: none; background: #fafafa;
+            width: 100%; padding: 12px; border: 2px solid var(--input-border); border-radius: 12px; 
+            margin-bottom: 15px; font-family: inherit; outline: none; background: var(--input-bg);
+            color: var(--text-dark);
         }
-        select:focus, input:focus, textarea:focus { border-color: var(--pastel-green-main); background: white; }
+        select:focus, input:focus, textarea:focus { border-color: var(--pastel-green-main); background: var(--white); }
 
         .btn-load { width: 100%; background: var(--text-dark); color: white; padding: 12px; border: none; border-radius: 12px; cursor: pointer; font-weight: 700; margin-bottom: 30px; }
+        [data-theme="dark"] .btn-load { background: var(--pastel-green-dark); color: white; }
+
         .btn-add { width: 100%; background: var(--pastel-green-dark); color: white; padding: 12px; border: none; border-radius: 12px; cursor: pointer; font-weight: 700; }
         .btn-add:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(92,141,137,0.3); }
 
         /* RIGHT: IMPACT LIST */
         .impact-container { 
-            background: white; padding: 40px; border-radius: 25px; 
+            background: var(--white); padding: 40px; border-radius: 25px; 
             box-shadow: var(--soft-shadow); min-height: 500px; 
         }
-        .header-area { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; border-bottom: 2px solid #f0f0f0; padding-bottom: 20px; }
+        .header-area { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; border-bottom: 2px solid var(--input-border); padding-bottom: 20px; }
         .header-area h1 { margin: 0; font-size: 1.8rem; color: var(--text-dark); }
         .leave-badge { background: #e1f2eb; color: var(--pastel-green-dark); padding: 5px 15px; border-radius: 20px; font-weight: 700; font-size: 0.85rem; }
+        [data-theme="dark"] .leave-badge { background: rgba(92, 141, 137, 0.2); }
 
         /* IMPACT CARDS */
         .impact-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
         
         .impact-card { 
-            padding: 20px; border-radius: 15px; background: #fff; 
-            box-shadow: 0 5px 15px rgba(0,0,0,0.03); border: 1px solid #eee;
+            padding: 20px; border-radius: 15px; background: var(--white); 
+            box-shadow: 0 5px 15px rgba(0,0,0,0.03); border: 1px solid var(--input-border);
             position: relative; overflow: hidden; transition: 0.3s;
         }
         .impact-card:hover { transform: translateY(-5px); box-shadow: 0 10px 25px rgba(0,0,0,0.08); }
@@ -155,8 +187,9 @@ if ($selected_app_id) {
         .icon-Task { background: #dbeafe; color: #2563eb; }
         .icon-Event { background: #fce7f3; color: #db2777; }
 
-        .card-title { font-weight: 700; color: #444; margin-bottom: 5px; }
+        .card-title { font-weight: 700; color: var(--text-dark); margin-bottom: 5px; }
         .card-desc { color: #777; font-size: 0.9rem; line-height: 1.5; }
+        [data-theme="dark"] .card-desc { color: #ccc; }
 
         .delete-btn { 
             position: absolute; top: 15px; right: 15px; color: #ff6b6b; 
@@ -164,6 +197,7 @@ if ($selected_app_id) {
             display: flex; align-items: center; justify-content: center; text-decoration: none; 
         }
         .delete-btn:hover { background: #ff6b6b; color: white; }
+        [data-theme="dark"] .delete-btn { background: #3a2525; }
 
         .empty-state { text-align: center; color: #aaa; margin-top: 50px; }
 
@@ -174,7 +208,7 @@ if ($selected_app_id) {
             display: none; justify-content: center; align-items: center; z-index: 2000;
         }
         .modal-box {
-            background: white; padding: 40px; border-radius: 30px;
+            background: var(--white); padding: 40px; border-radius: 30px;
             width: 90%; max-width: 400px; text-align: center;
             box-shadow: 0 30px 60px rgba(0,0,0,0.2);
             animation: popIn 0.3s ease-out;
@@ -308,7 +342,7 @@ if ($selected_app_id) {
     <div class="modal-overlay" id="logoutModal">
         <div class="modal-box">
             <div style="font-size: 4rem; margin-bottom: 10px;">👋</div>
-            <h2 style="margin-top:0; color:#333;">Leaving so soon?</h2>
+            <h2 style="margin-top:0; color:var(--text-dark);">Leaving so soon?</h2>
             <p style="color:#666;">You will be logged out of your session.</p>
             <div style="margin-top:20px;">
                 <button class="btn-no" onclick="closeLogout()">Cancel</button>

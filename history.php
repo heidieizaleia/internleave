@@ -15,7 +15,6 @@ $conn = new mysqli("localhost", "root", "", "internleave");
 if ($conn->connect_error) { die("Connection failed: " . $conn->connect_error); }
 
 // 2. FETCH SUMMARY STATS
-// Count total days of APPROVED leave only
 $stats_sql = "SELECT SUM(total_days) as total_taken, COUNT(*) as total_apps 
               FROM intern_leave_applications 
               WHERE student_id = '$student_id' AND status = 'Approved'";
@@ -26,7 +25,7 @@ $count_approved = $stats['total_apps'] ?? 0;
 // 3. FETCH ALL HISTORY RECORDS
 $history_sql = "SELECT * FROM intern_leave_applications 
                 WHERE student_id = '$student_id' 
-                ORDER BY start_date DESC"; // Newest dates first
+                ORDER BY start_date DESC"; 
 $result = $conn->query($history_sql);
 ?>
 
@@ -38,8 +37,21 @@ $result = $conn->query($history_sql);
     <title>Leave History | InternLeave</title>
     <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            const savedColor = localStorage.getItem('accentColor');
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            if (savedColor) {
+                document.documentElement.style.setProperty('--pastel-green-dark', savedColor);
+                document.documentElement.style.setProperty('--pastel-green-main', savedColor);
+            }
+        })();
+    </script>
+
     <style>
-        /* --- THEME (MATCHING OTHERS) --- */
+        /* CSS STYLES */
         :root {
             --pastel-green-light: #f1f8f6;
             --pastel-green-main: #a7d7c5;
@@ -50,9 +62,21 @@ $result = $conn->query($history_sql);
             --approved-bg: #d1fae5; --approved-text: #065f46;
             --pending-bg: #fef3c7; --pending-text: #92400e;
             --rejected-bg: #fee2e2; --rejected-text: #991b1b;
+            --card-bg: #ffffff;
+            --border-color: #f0f0f0;
         }
 
-        * { box-sizing: border-box; font-family: 'Quicksand', sans-serif; transition: all 0.3s ease; }
+        /* DARK MODE OVERRIDES */
+        [data-theme="dark"] {
+            --pastel-green-light: #1a1f1e;
+            --white: #252b2a;
+            --text-dark: #e1f2eb;
+            --card-bg: #252b2a;
+            --border-color: #3a4240;
+            --soft-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        * { box-sizing: border-box; font-family: 'Quicksand', sans-serif; transition: background-color 0.3s ease, color 0.3s ease; }
         body { margin: 0; padding: 0; background-color: var(--pastel-green-light); color: var(--text-dark); }
 
         /* MARQUEE */
@@ -62,35 +86,43 @@ $result = $conn->query($history_sql);
 
         /* NAV */
         nav { background: var(--white); padding: 15px 40px; display: flex; justify-content: space-between; align-items: center; box-shadow: var(--soft-shadow); position: sticky; top: 0; z-index: 1000; }
-        .logo-text { font-size: 2.2rem; font-weight: 700; letter-spacing: -2px; text-decoration: none; }
+        .logo-text { font-size: 2.2rem; font-weight: 700; letter-spacing: -2px; text-decoration: none; color: var(--text-dark); }
         .logo-text .intern { color: var(--pastel-green-dark); }
         .logo-text .leave { color: var(--pastel-green-main); font-weight: 300; }
+        
         .nav-links { display: flex; gap: 8px; align-items: center; }
         .nav-links a { text-decoration: none; color: #666; font-weight: 600; font-size: 0.8rem; padding: 10px 14px; border-radius: 12px; }
         .nav-links a:hover, .nav-links a.active { background: #e1f2eb; color: var(--pastel-green-dark); }
+        [data-theme="dark"] .nav-links a:hover, [data-theme="dark"] .nav-links a.active { background: rgba(255,255,255,0.1); }
+
         .logout-link { background: #ffeded !important; color: #ff6b6b !important; border: 1px solid #ffcccc; cursor: pointer; }
 
         /* LAYOUT */
         .container { max-width: 1000px; margin: 50px auto; padding: 0 20px; }
 
-        /* DASHBOARD SUMMARY CARDS */
+        /* DASHBOARD CARDS */
         .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 40px; }
-        .stat-card { background: white; padding: 25px; border-radius: 20px; box-shadow: var(--soft-shadow); display: flex; align-items: center; gap: 20px; }
+        .stat-card { background: var(--card-bg); padding: 25px; border-radius: 20px; box-shadow: var(--soft-shadow); display: flex; align-items: center; gap: 20px; }
+        
         .stat-icon { width: 60px; height: 60px; border-radius: 50%; background: #e1f2eb; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: var(--pastel-green-dark); }
+        [data-theme="dark"] .stat-icon { background: rgba(92, 141, 137, 0.2); } /* Dark mode icon bg */
+
         .stat-info h3 { margin: 0; font-size: 2rem; color: var(--text-dark); }
         .stat-info p { margin: 0; color: #888; font-size: 0.9rem; font-weight: 700; text-transform: uppercase; }
 
-        /* HISTORY TABLE STYLE */
-        .history-panel { background: white; border-radius: 25px; box-shadow: var(--soft-shadow); overflow: hidden; padding: 30px; }
+        /* HISTORY TABLE */
+        .history-panel { background: var(--card-bg); border-radius: 25px; box-shadow: var(--soft-shadow); overflow: hidden; padding: 30px; }
         .panel-header { margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
         .panel-header h2 { margin: 0; color: var(--text-dark); }
 
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th { text-align: left; padding: 15px; color: #888; font-weight: 700; font-size: 0.85rem; border-bottom: 2px solid #f0f0f0; text-transform: uppercase; }
-        td { padding: 20px 15px; border-bottom: 1px solid #f9f9f9; font-size: 0.95rem; color: #555; vertical-align: middle; }
+        th { text-align: left; padding: 15px; color: #888; font-weight: 700; font-size: 0.85rem; border-bottom: 2px solid var(--border-color); text-transform: uppercase; }
+        td { padding: 20px 15px; border-bottom: 1px solid var(--border-color); font-size: 0.95rem; color: #555; vertical-align: middle; }
+        [data-theme="dark"] td { color: #ccc; } /* Lighter text for table rows in dark mode */
         
         tr:last-child td { border-bottom: none; }
         tr:hover { background-color: #fcfcfc; }
+        [data-theme="dark"] tr:hover { background-color: rgba(255,255,255,0.05); }
 
         /* BADGES */
         .badge { padding: 6px 12px; border-radius: 20px; font-weight: 700; font-size: 0.8rem; display: inline-block; }
@@ -102,6 +134,22 @@ $result = $conn->query($history_sql);
         .days-count { font-size: 0.85rem; color: #aaa; }
 
         .empty-state { text-align: center; padding: 50px; color: #aaa; }
+
+        /* LOGOUT MODAL */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6); backdrop-filter: blur(8px);
+            display: none; justify-content: center; align-items: center; z-index: 2000;
+        }
+        .modal-box {
+            background: var(--card-bg); padding: 40px; border-radius: 30px;
+            width: 90%; max-width: 400px; text-align: center;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.2);
+            animation: popIn 0.3s ease-out;
+        }
+        @keyframes popIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        .btn-yes { background: #ff6b6b; color: white; padding: 12px 30px; border:none; border-radius:10px; font-weight:700; cursor:pointer; margin-left:10px; }
+        .btn-no { background: #eee; color: #555; padding: 12px 30px; border:none; border-radius:10px; font-weight:700; cursor:pointer; }
 
         @media (max-width: 768px) {
             .stats-row { grid-template-columns: 1fr; }
@@ -124,7 +172,7 @@ $result = $conn->query($history_sql);
             <a href="status.php">Status</a>
             <a href="impact.php">Impact</a>
             <a href="history.php" class="active">History</a> <a href="profilesetting.php">Settings</a>
-            <a class="logout-link" onclick="window.location.href='index.php'">Logout</a>
+            <a class="logout-link" onclick="openLogout()">Logout</a>
         </div>
     </nav>
 
@@ -210,6 +258,25 @@ $result = $conn->query($history_sql);
         </div>
 
     </div>
+
+    <div class="modal-overlay" id="logoutModal">
+        <div class="modal-box">
+            <div style="font-size: 4rem; margin-bottom: 10px;">👋</div>
+            <h2 style="margin-top:0; color:var(--text-dark);">Leaving so soon?</h2>
+            <p style="color:#666;">You will be logged out of your session.</p>
+            <div style="margin-top:20px;">
+                <button class="btn-no" onclick="closeLogout()">Cancel</button>
+                <button class="btn-yes" onclick="confirmLogout()">Logout</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function openLogout() { document.getElementById('logoutModal').style.display = 'flex'; }
+        function closeLogout() { document.getElementById('logoutModal').style.display = 'none'; }
+        function confirmLogout() { window.location.href = 'index.php'; }
+        window.onclick = function(e) { if(e.target == document.getElementById('logoutModal')) closeLogout(); }
+    </script>
 
 </body>
 </html>

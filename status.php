@@ -46,37 +46,63 @@ $result = $conn->query($sql);
     <title>My Status | InternLeave</title>
     <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            const savedColor = localStorage.getItem('accentColor');
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            if (savedColor) {
+                document.documentElement.style.setProperty('--pastel-green-dark', savedColor);
+                document.documentElement.style.setProperty('--pastel-green-main', savedColor);
+            }
+        })();
+    </script>
+
     <style>
-        /* --- THEME STYLES --- */
-        :root {
-            --pastel-green-light: #f1f8f6;
-            --pastel-green-main: #a7d7c5;
-            --pastel-green-dark: #5c8d89;
-            --white: #ffffff;
-            --text-dark: #2d3436;
-            --pending: #f59e0b;
-            --approved: #10b981;
-            --rejected: #ef4444;
+        /* CSS STYLES */
+        :root { 
+            --pastel-green-light: #f1f8f6; 
+            --pastel-green-main: #a7d7c5; 
+            --pastel-green-dark: #5c8d89; 
+            --white: #ffffff; 
+            --text-dark: #2d3436; 
+            --pending: #f59e0b; 
+            --approved: #10b981; 
+            --rejected: #ef4444; 
+            --soft-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+            --card-bg: #ffffff;
         }
 
-        * { box-sizing: border-box; font-family: 'Quicksand', sans-serif; transition: all 0.3s ease; }
+        /* DARK MODE OVERRIDES */
+        [data-theme="dark"] {
+            --pastel-green-light: #1a1f1e;
+            --white: #252b2a;
+            --text-dark: #e1f2eb;
+            --card-bg: #252b2a;
+            --soft-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        * { box-sizing: border-box; font-family: 'Quicksand', sans-serif; transition: background-color 0.3s ease, color 0.3s ease; }
         body { margin: 0; padding: 0; background-color: var(--pastel-green-light); color: var(--text-dark); }
 
-        /* NAV & MARQUEE */
         .marquee-container { background: var(--pastel-green-dark); color: white; padding: 12px 0; font-weight: 600; font-size: 0.9rem; }
         .marquee-text { display: inline-block; white-space: nowrap; animation: marqueeMove 30s linear infinite; }
         @keyframes marqueeMove { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
 
-        nav { background: var(--white); padding: 15px 40px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 5px 20px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 1000; }
-        .logo-text { font-size: 2.2rem; font-weight: 700; letter-spacing: -2px; text-decoration: none; }
+        nav { background: var(--white); padding: 15px 40px; display: flex; justify-content: space-between; align-items: center; box-shadow: var(--soft-shadow); position: sticky; top: 0; z-index: 1000; }
+        
+        .logo-text { font-size: 2.2rem; font-weight: 700; letter-spacing: -2px; text-decoration: none; color: var(--text-dark); }
         .logo-text .intern { color: var(--pastel-green-dark); }
         .logo-text .leave { color: var(--pastel-green-main); font-weight: 300; }
+        
         .nav-links { display: flex; gap: 8px; align-items: center; }
         .nav-links a { text-decoration: none; color: #666; font-weight: 600; font-size: 0.8rem; padding: 10px 14px; border-radius: 12px; }
         .nav-links a:hover, .nav-links a.active { background: #e1f2eb; color: var(--pastel-green-dark); }
+        [data-theme="dark"] .nav-links a:hover, [data-theme="dark"] .nav-links a.active { background: rgba(255,255,255,0.1); }
+
         .logout-link { background: #ffeded !important; color: #ff6b6b !important; border: 1px solid #ffcccc; cursor: pointer; }
 
-        /* CONTAINER */
         .container { max-width: 900px; margin: 50px auto; padding: 0 20px; }
         
         .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
@@ -84,10 +110,9 @@ $result = $conn->query($sql);
         .btn-new { background: var(--pastel-green-dark); color: white; text-decoration: none; padding: 12px 25px; border-radius: 30px; font-weight: 700; box-shadow: 0 5px 15px rgba(92, 141, 137, 0.3); }
         .btn-new:hover { transform: translateY(-3px); }
 
-        /* STATUS CARDS */
         .status-card {
-            background: white; padding: 30px; border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.03); margin-bottom: 25px;
+            background: var(--card-bg); padding: 30px; border-radius: 20px;
+            box-shadow: var(--soft-shadow); margin-bottom: 25px;
             display: flex; justify-content: space-between; align-items: center;
             border-left: 10px solid #ccc; position: relative; overflow: hidden;
         }
@@ -96,9 +121,15 @@ $result = $conn->query($sql);
         .card-Approved { border-left-color: var(--approved); }
         .card-Rejected { border-left-color: var(--rejected); }
 
-        .info h3 { margin: 0 0 5px; color: #333; font-size: 1.4rem; }
+        .info h3 { margin: 0 0 5px; color: var(--text-dark); font-size: 1.4rem; } /* Adjusted color for dark mode compatibility */
         .info .meta { color: #888; font-size: 0.9rem; margin-top: 5px; }
-        .info .reason { margin-top: 10px; color: #555; background: #f9f9f9; padding: 10px; border-radius: 10px; display: inline-block; font-size: 0.95rem; }
+        
+        .info .reason { 
+            margin-top: 10px; color: #555; background: #f9f9f9; 
+            padding: 10px; border-radius: 10px; display: inline-block; font-size: 0.95rem; 
+        }
+        /* Dark mode for reason box */
+        [data-theme="dark"] .info .reason { background: #2f3635; color: #ccc; }
 
         .status-badge { padding: 8px 20px; border-radius: 30px; font-weight: 700; font-size: 0.9rem; color: white; text-transform: uppercase; letter-spacing: 1px; text-align: center; width: 120px; display: block; }
         .bg-Pending { background: var(--pending); }
@@ -108,6 +139,8 @@ $result = $conn->query($sql);
         .actions { text-align: right; margin-top: 15px; }
         .btn-cancel { background: #fff5f5; color: #ef4444; border: 1px solid #fee2e2; padding: 8px 15px; border-radius: 10px; text-decoration: none; font-weight: 700; font-size: 0.85rem; transition: 0.2s; }
         .btn-cancel:hover { background: #ef4444; color: white; }
+        /* Dark mode cancel button tweak */
+        [data-theme="dark"] .btn-cancel { background: #3a2525; border-color: #ef4444; }
 
         .empty-state { text-align: center; padding: 60px; color: #aaa; }
         .alert { padding: 15px; border-radius: 15px; margin-bottom: 20px; text-align: center; font-weight: 700; }
