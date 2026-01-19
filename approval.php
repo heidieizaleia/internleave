@@ -56,9 +56,8 @@
 
         .container { max-width: 1000px; margin: 40px auto; padding: 0 20px; }
         .page-header { margin-bottom: 30px; }
-        .page-header h1 { margin: 0; color: var(--text-dark); }
 
-        /* Approval Table/Cards */
+        /* Approval Card */
         .approval-card { 
             background: var(--card-bg); 
             border-radius: 20px; 
@@ -67,7 +66,7 @@
             box-shadow: var(--soft-shadow);
             border: 1px solid var(--border-color);
             display: grid;
-            grid-template-columns: 80px 1fr 200px;
+            grid-template-columns: 80px 1fr 180px;
             gap: 20px;
             align-items: center;
         }
@@ -81,52 +80,55 @@
         }
 
         .details-box h3 { margin: 0 0 5px 0; font-size: 1.2rem; }
-        .details-box .meta { font-size: 0.85rem; color: #888; display: flex; gap: 15px; margin-bottom: 10px; }
-        .details-box .meta i { color: var(--pastel-green-dark); }
-        
-        .impact-preview {
-            background: #fafafa;
-            padding: 10px 15px;
-            border-radius: 10px;
-            font-size: 0.85rem;
-            border-left: 4px solid var(--pastel-green-main);
+        .meta { font-size: 0.85rem; color: #888; display: flex; gap: 15px; margin-bottom: 8px; }
+        .meta i { color: var(--pastel-green-dark); }
+
+        .btn-link { 
+            color: var(--pastel-green-dark); 
+            text-decoration: underline; 
+            font-size: 0.85rem; 
+            font-weight: 700; 
+            cursor: pointer; 
+            background: none; 
+            border: none; 
+            padding: 0;
         }
-        [data-theme="dark"] .impact-preview { background: #1a1f1e; }
 
         .action-group { display: flex; flex-direction: column; gap: 10px; }
         
         .btn {
-            border: none;
-            padding: 12px;
-            border-radius: 12px;
-            font-weight: 700;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            font-size: 0.9rem;
+            border: none; padding: 10px; border-radius: 10px;
+            font-weight: 700; cursor: pointer; display: flex;
+            align-items: center; justify-content: center; gap: 8px; font-size: 0.85rem;
         }
         .btn-approve { background: var(--success); color: white; }
-        .btn-approve:hover { background: #0e9f6e; transform: scale(1.02); }
         .btn-reject { background: #fff1f1; color: var(--danger); border: 1px solid #ffcccc; }
-        .btn-reject:hover { background: var(--danger); color: white; }
 
-        .empty-state {
-            text-align: center;
-            padding: 60px;
-            background: var(--card-bg);
-            border-radius: 30px;
-            color: #888;
+        /* MODAL STYLE */
+        .modal-overlay { 
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(0,0,0,0.5); display: none; 
+            justify-content: center; align-items: center; z-index: 2000; 
         }
+        .modal-content { 
+            background: var(--card-bg); width: 90%; max-width: 600px; 
+            border-radius: 25px; padding: 30px; position: relative;
+            max-height: 90vh; overflow-y: auto;
+        }
+        .close-modal { position: absolute; top: 20px; right: 20px; font-size: 1.5rem; cursor: pointer; color: #888; }
+        
+        .detail-row { margin-bottom: 20px; }
+        .detail-label { font-size: 0.8rem; color: #888; font-weight: 700; text-transform: uppercase; }
+        .detail-value { font-size: 1rem; color: var(--text-dark); margin-top: 5px; }
 
-        /* Responsive */
-        @media (max-width: 768px) {
-            .approval-card { grid-template-columns: 1fr; text-align: center; }
-            .student-avatar { margin: 0 auto; }
-            .action-group { flex-direction: row; }
-            .btn { flex: 1; }
+        .doc-preview {
+            border: 2px dashed var(--border-color);
+            padding: 15px; border-radius: 15px;
+            display: flex; align-items: center; gap: 15px;
+            background: var(--pastel-green-light);
+            text-decoration: none; color: var(--text-dark);
         }
+        .doc-preview i { font-size: 2rem; color: var(--pastel-green-dark); }
     </style>
 </head>
 <body>
@@ -139,76 +141,78 @@
             <a href="dashboardsupervisor.php">Dashboard</a>
             <a href="approval.php" class="active">Approvals</a>
             <a href="intern_list.php">My Interns</a>
-            <a href="supervisorsetting.php">Settings</a>
         </div>
     </nav>
 
     <div class="container">
         <div class="page-header">
-            <h1>Pending Approvals</h1>
-            <p>Review leave requests and check their impact on work schedules.</p>
+            <h1>Review Applications</h1>
+            <p>You have 2 pending requests to verify.</p>
         </div>
 
         <div class="approval-card">
             <div class="student-avatar">AD</div>
             <div class="details-box">
-                <h3>Ahmad Daniel bin Yusof</h3>
+                <h3>Ahmad Daniel</h3>
                 <div class="meta">
-                    <span><i class="far fa-calendar-alt"></i> 24 Oct - 25 Oct (2 Days)</span>
-                    <span><i class="fas fa-tag"></i> Medical Leave</span>
+                    <span><i class="far fa-calendar"></i> 2 Days</span>
+                    <span><i class="fas fa-notes-medical"></i> Medical</span>
                 </div>
-                <div class="impact-preview">
-                    <strong>Leave Impact:</strong> "Will miss the Wednesday Sprint meeting. Task JIRA-402 will be handed over to Sarah."
-                </div>
+                <button class="btn-link" onclick="openDetails('Ahmad Daniel', 'Medical', 'Fever and Flu. Doctor advised 2 days rest.', 'mc_document.pdf')">
+                    View full details & documents
+                </button>
             </div>
             <div class="action-group">
-                <button class="btn btn-approve" onclick="handleAction('Approved', 'Ahmad Daniel')">
-                    <i class="fas fa-check"></i> Approve
-                </button>
-                <button class="btn btn-reject" onclick="handleAction('Rejected', 'Ahmad Daniel')">
-                    <i class="fas fa-times"></i> Reject
-                </button>
+                <button class="btn btn-approve" onclick="alert('Approved')">Approve</button>
+                <button class="btn btn-reject" onclick="alert('Rejected')">Reject</button>
             </div>
         </div>
+    </div>
 
-        <div class="approval-card">
-            <div class="student-avatar" style="background:#fef3c7; color:#d97706;">MK</div>
-            <div class="details-box">
-                <h3>Michael Khoo</h3>
-                <div class="meta">
-                    <span><i class="far fa-calendar-alt"></i> 28 Oct - 30 Oct (3 Days)</span>
-                    <span><i class="fas fa-tag"></i> Emergency Leave</span>
-                </div>
-                <div class="impact-preview">
-                    <strong>Leave Impact:</strong> "Family emergency. I have updated the documentation for the current API module."
-                </div>
-            </div>
-            <div class="action-group">
-                <button class="btn btn-approve" onclick="handleAction('Approved', 'Michael Khoo')">
-                    <i class="fas fa-check"></i> Approve
-                </button>
-                <button class="btn btn-reject" onclick="handleAction('Rejected', 'Michael Khoo')">
-                    <i class="fas fa-times"></i> Reject
-                </button>
-            </div>
-        </div>
+    <div class="modal-overlay" id="detailModal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeModal()">&times;</span>
+            <h2 id="modalName">Request Details</h2>
+            <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 20px 0;">
 
-        <div class="empty-state" style="display:none;">
-            <i class="fas fa-clipboard-check" style="font-size: 4rem; margin-bottom: 20px; opacity: 0.2;"></i>
-            <h2>All Caught Up!</h2>
-            <p>There are no pending leave applications to review.</p>
+            <div class="detail-row">
+                <div class="detail-label">Reason for Leave</div>
+                <div class="detail-value" id="modalReason">---</div>
+            </div>
+
+            <div class="detail-row">
+                <div class="detail-label">Supporting Document</div>
+                <a href="#" class="doc-preview" id="modalDocLink" target="_blank">
+                    <i class="fas fa-file-pdf"></i>
+                    <div>
+                        <div style="font-weight:700;" id="modalDocName">document.pdf</div>
+                        <div style="font-size:0.8rem; color:#888;">Click to view/download</div>
+                    </div>
+                </a>
+            </div>
+
+            <div style="display: flex; gap: 10px; margin-top: 30px;">
+                <button class="btn btn-approve" style="flex:1;" onclick="closeModal()">Process Approval</button>
+                <button class="btn btn-reject" style="flex:1;" onclick="closeModal()">Close Window</button>
+            </div>
         </div>
     </div>
 
     <script>
-        function handleAction(status, name) {
-            const reason = status === 'Rejected' ? prompt("Please provide a reason for rejection:") : null;
-            
-            if (status === 'Rejected' && reason === null) return; // Cancel if no reason for rejection
+        function openDetails(name, type, reason, docName) {
+            document.getElementById('modalName').innerText = name + "'s Request";
+            document.getElementById('modalReason').innerText = reason;
+            document.getElementById('modalDocName').innerText = docName;
+            // document.getElementById('modalDocLink').href = 'uploads/' + docName; // Real path
+            document.getElementById('detailModal').style.display = 'flex';
+        }
 
-            alert(`${status}: Request for ${name} has been processed.`);
-            // In a real app, you would use fetch() here to update your database.
-            // location.reload(); 
+        function closeModal() {
+            document.getElementById('detailModal').style.display = 'none';
+        }
+
+        window.onclick = function(event) {
+            if (event.target == document.getElementById('detailModal')) closeModal();
         }
     </script>
 </body>
