@@ -255,7 +255,7 @@
                 <a href="intern_list.php" class="action-btn">
                     <i class="fas fa-user-graduate"></i> My Intern List
                 </a>
-                <a href="profilesetting.php" class="action-btn">
+                <a href="supervisorsetting.php" class="action-btn">
                     <i class="fas fa-user-cog"></i> Profile Settings
                 </a>
             </div>
