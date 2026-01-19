@@ -188,7 +188,7 @@
 
     <div class="marquee-container">
         <div class="marquee-text">
-            <span>📢 Attention Supervisor: There are <b><?php echo $pending_count; ?></b> pending leave applications requiring your decision.</span>
+            <span>📢 Attention Supervisor: There are pending leave applications requiring your decision.</span>
             <span>✅ Tip: Review the "Leave Impact" section before making a decision to ensure project continuity.</span>
         </div>
     </div>
@@ -221,13 +221,13 @@
             <div class="card">
                 <div class="card-icon">⏳</div>
                 <h3>Pending Actions</h3>
-                <div class="stat-number"><?php echo $pending_count; ?></div>
+                <div class="stat-number"></div>
                 <p>Applications awaiting your approval.</p>
             </div>
             <div class="card">
                 <div class="card-icon">👥</div>
                 <h3>Active Interns</h3>
-                <div class="stat-number"><?php echo $intern_count; ?></div>
+                <div class="stat-number"></div>
                 <p>Total interns under your supervision.</p>
             </div>
             <div class="card">
