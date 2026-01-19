@@ -16,12 +16,13 @@ $student_id = $_SESSION['user_id']; // Get logged-in ID
 $conn = new mysqli("localhost", "root", "", "internleave");
 if ($conn->connect_error) { die("Connection failed: " . $conn->connect_error); }
 
-// 3. FETCH STUDENT DETAILS
+// 3. FETCH STUDENT DETAILS (For Display)
 $sql_student = "SELECT * FROM students WHERE student_id = '$student_id'";
 $res_student = $conn->query($sql_student);
 $student_data = $res_student->fetch_assoc();
 $student_name = $student_data['full_name'] ?? 'Student';
 $program_code = $student_data['programme_code'] ?? 'N/A';
+$profile_img = $student_data['profile_image'] ?? ''; // FETCH IMAGE PATH
 
 // 4. HANDLE FORM SUBMISSION
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
@@ -31,12 +32,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $end_date = $_POST['end_date'];
     $reason = $conn->real_escape_string($_POST['reason']);
     
+    // CALCULATE DAYS
     $start = new DateTime($start_date);
     $end = new DateTime($end_date);
     $interval = $start->diff($end);
     $total_days = $interval->days + 1;
 
-    // GET PLACEMENT ID
+    // --- CRITICAL FIX: GET PLACEMENT ID ---
     $place_sql = "SELECT placement_id FROM internship_placements WHERE student_id = '$student_id' LIMIT 1";
     $place_res = $conn->query($place_sql);
 
@@ -56,7 +58,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
     }
 
-    // HANDLE FILE
+    // HANDLE FILE UPLOAD
     $target_file = NULL;
     if (isset($_POST['has_file']) && $_POST['has_file'] == 'yes' && !empty($_FILES["supporting_doc"]["name"])) {
         $target_dir = "uploads/";
@@ -66,13 +68,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         move_uploaded_file($_FILES["supporting_doc"]["tmp_name"], $target_file);
     }
 
-    // INSERT
+    // INSERT LEAVE APPLICATION
     $sql = "INSERT INTO intern_leave_applications 
             (student_id, placement_id, leave_type, start_date, end_date, total_days, reason, supporting_doc_path, status)
             VALUES ('$student_id', '$placement_id', '$leave_type', '$start_date', '$end_date', '$total_days', '$reason', '$target_file', 'Pending')";
 
     if ($conn->query($sql) === TRUE) {
-        echo "<script>alert('✅ Application Submitted Successfully!'); window.location.href = 'status.php';</script>";
+        echo "<script>
+            alert('✅ Application Submitted Successfully!');
+            window.location.href = 'status.php'; 
+        </script>";
         exit();
     } else {
         $message = "<div class='alert error'>Database Error: " . $conn->error . "</div>";
@@ -143,7 +148,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         .main-wrapper { display: grid; grid-template-columns: 350px 1fr; gap: 30px; max-width: 1200px; margin: 40px auto; padding: 0 20px; }
 
         .profile-card { background: var(--white); padding: 40px 30px; border-radius: 25px; text-align: center; box-shadow: var(--soft-shadow); position: sticky; top: 100px; height: fit-content; }
+        
         .avatar-circle { width: 120px; height: 120px; margin: 0 auto 20px; border-radius: 50%; background: #eee; display: flex; align-items: center; justify-content: center; font-size: 3rem; color: #aaa; position: relative; z-index: 1; }
+        /* The RGB border animation */
         .avatar-circle::before { content: ''; position: absolute; top: -5px; left: -5px; right: -5px; bottom: -5px; border-radius: 50%; z-index: -1; background: linear-gradient(45deg, #ff0000, #ff7300, #fffb00, #48ff00, #00ffd5, #002bff, #7a00ff, #ff00c8); background-size: 400%; animation: spinRGB 20s linear infinite; filter: blur(8px); opacity: 0.5; }
         @keyframes spinRGB { 0% { background-position: 0 0; } 50% { background-position: 100% 0; } 100% { background-position: 0 0; } }
         
@@ -168,11 +175,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         input:focus, select:focus, textarea:focus { border-color: var(--pastel-green-dark); background: var(--white); box-shadow: 0 5px 15px rgba(92, 141, 137, 0.15); }
         .row { display: flex; gap: 20px; } .col { flex: 1; }
 
-        /* FIXED VISIBILITY FOR LOCKED INPUT */
         input[readonly] { 
             background-color: #eee !important; 
             cursor: not-allowed; 
-            color: #333 !important; /* Force dark text color */
+            color: #333 !important; 
             font-weight: 700;
             border-color: #ccc;
         }
@@ -244,7 +250,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <div class="main-wrapper">
         
         <div class="profile-card">
-            <div class="avatar-circle"><i class="fas fa-user"></i></div>
+            <div class="avatar-circle">
+                <?php if (!empty($profile_img) && file_exists($profile_img)): ?>
+                    <img src="<?php echo $profile_img; ?>" alt="Profile" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+                <?php else: ?>
+                    <i class="fas fa-user"></i>
+                <?php endif; ?>
+            </div>
+            
             <div class="profile-info">
                 <h2><?php echo htmlspecialchars($student_name); ?></h2>
                 <p><?php echo htmlspecialchars($program_code); ?></p>
