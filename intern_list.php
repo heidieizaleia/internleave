@@ -12,14 +12,14 @@ $conn = new mysqli("localhost", "root", "", "internleave");
 if ($conn->connect_error) { die("Connection failed: " . $conn->connect_error); }
 
 // 2. FETCH ASSIGNED STUDENTS (INTERNS)
-// Note: Using backticks for table names with spaces like `intern_leave _application`
+// Removed spaces: `intern_leave_application` and `student`
 $sql_interns = "SELECT 
                     s.student_id, 
                     s.full_name, 
                     s.programme_code, 
                     s.year_semester,
-                    (SELECT COUNT(*) FROM `intern_leave _application` WHERE student_id = s.student_id AND status = 'Pending') as pending_count,
-                    (SELECT COUNT(*) FROM `intern_leave _application` WHERE student_id = s.student_id AND status = 'Approved') as taken_count
+                    (SELECT COUNT(*) FROM intern_leave_application WHERE student_id = s.student_id AND status = 'Pending') as pending_count,
+                    (SELECT COUNT(*) FROM intern_leave_application WHERE student_id = s.student_id AND status = 'Approved') as taken_count
                 FROM student s
                 JOIN internship_placement p ON s.student_id = p.student_id
                 WHERE p.supervisor_id = '$supervisor_id'
@@ -44,7 +44,7 @@ if (isset($_GET['view_id'])) {
     if ($view_student) {
         $h_sql = "SELECT a.*, 
                  (SELECT COUNT(*) FROM leave_impact WHERE application_id = a.application_id) as impact_count 
-                 FROM `intern_leave _application` a 
+                 FROM intern_leave_application a 
                  WHERE a.student_id = '$vid' 
                  ORDER BY a.start_date DESC";
         $view_history = $conn->query($h_sql);
@@ -67,10 +67,14 @@ if (isset($_GET['view_id'])) {
         * { box-sizing: border-box; font-family: 'Quicksand', sans-serif; transition: all 0.3s ease; }
         body { margin: 0; background-color: var(--pastel-green-light); color: var(--text-dark); }
         
+        .marquee-container { background: var(--pastel-green-dark); color: white; padding: 10px 0; overflow: hidden; }
+        .marquee-text { white-space: nowrap; display: inline-block; padding-left: 100%; animation: marquee 20s linear infinite; }
+        @keyframes marquee { 0% { transform: translate(0, 0); } 100% { transform: translate(-100%, 0); } }
+
         nav { background: var(--white); padding: 15px 40px; display: flex; justify-content: space-between; align-items: center; box-shadow: var(--soft-shadow); position: sticky; top: 0; z-index: 1000; }
         .logo-text { font-size: 2.4rem; font-weight: 700; text-decoration: none; color: var(--text-dark); }
         .logo-text .intern { color: var(--pastel-green-dark); }
-        .nav-links a { text-decoration: none; color: #888; font-weight: 600; font-size: 0.8rem; padding: 10px 14px; border-radius: 12px; }
+        .nav-links a { text-decoration: none; color: #888; font-weight: 600; font-size: 0.8rem; padding: 10px 14px; border-radius: 12px; cursor: pointer; }
         .nav-links a.active { background: #e1f2eb; color: var(--pastel-green-dark); }
         
         .container { max-width: 1100px; margin: 40px auto; padding: 0 20px; }
@@ -93,19 +97,18 @@ if (isset($_GET['view_id'])) {
 </head>
 <body>
 
-<div class="marquee-container">
-        <div class="marquee-text"><span>✨ Customize your supervisor profile and application preferences here.</span></div>
+    <div class="marquee-container">
+        <div class="marquee-text"><span>✨ View and manage your assigned interns. Click on a student to see their detailed leave history.</span></div>
     </div>
 
     <nav>
         <a href="dashboardsupervisor.php" class="logo-text"><span class="intern">Intern</span><span class="leave">Leave</span></a>
-        
         <div class="nav-links">
             <a href="dashboardsupervisor.php">Dashboard</a>
             <a href="approval.php">Approvals</a>
-            <a href="intern_list.php">My Interns</a>
-            <a href="supervisorsetting.php" class="active">Settings</a>
-            <a class="logout-link" onclick="openLogout()">Logout</a>
+            <a href="intern_list.php" class="active">My Interns</a>
+            <a href="supervisorsetting.php">Settings</a>
+            <a href="index.php" style="color:#ff6b6b;">Logout</a>
         </div>
     </nav>
 
