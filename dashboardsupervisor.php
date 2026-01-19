@@ -163,7 +163,7 @@
             <a href="dashboardsupervisor.php" class="active">Dashboard</a>
             <a href="approval.php">Approvals</a>
             <a href="intern_list.php">My Interns</a>
-            <a href="profilesetting.php">Profile</a>
+            <a href="supervisorsetting.php">Settings</a>
             <a class="logout-link" onclick="openLogout()">Logout</a>
         </div>
     </nav>
@@ -209,13 +209,6 @@
                     <p>Interns on Leave</p>
                 </div>
                 <i class="fas fa-bed kpi-icon"></i>
-            </div>
-            <div class="kpi-card kpi-purple">
-                <div class="kpi-content">
-                    <h3>24</h3>
-                    <p>Total Apps Handled</p>
-                </div>
-                <i class="fas fa-check-double kpi-icon"></i>
             </div>
         </div>
 
