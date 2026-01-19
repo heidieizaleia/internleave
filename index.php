@@ -40,7 +40,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                             VALUES ('$id', '$name', '$prog', '$sem', '$phone', '$email', '$pass')";
                     
                     if ($conn->query($sql) === TRUE) {
-                        // FIX: Added 'start_date' and 'end_date' using CURDATE() (Current Date) to fix the crash
+                        
+                        // --- FIX START: Create Default Staff/Supervisor if missing to prevent Crash ---
+                        $conn->query("INSERT IGNORE INTO staffs (staff_id, staff_name, email, password) VALUES ('1', 'Default Staff', 'admin@uitm.edu.my', '123')");
+                        $conn->query("INSERT IGNORE INTO industry_supervisors (supervisor_id, supervisor_name, company_name, email, password) VALUES (1, 'Default Supervisor', 'Pending', 'admin@company.com', '123')");
+                        // --- FIX END ---
+
+                        // Create Placement
                         $place_sql = "INSERT INTO internship_placements 
                                       (student_id, company_name, supervisor_id, staff_id, start_date, end_date) 
                                       VALUES ('$id', '$company', 1, '1', CURDATE(), CURDATE())";
