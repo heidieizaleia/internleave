@@ -44,7 +44,7 @@
         body { margin: 0; padding: 0; background-color: var(--pastel-green-light); color: var(--text-dark); overflow-x: hidden; scroll-behavior: smooth; }
 
         /* --- MARQUEE --- */
-        .marquee-container { background: #e67e22; color: white; padding: 12px 0; font-weight: 600; font-size: 0.9rem; position: relative; z-index: 1001; }
+        .marquee-container { background: var(--pastel-green-dark); color: white; padding: 12px 0; font-weight: 600; font-size: 0.9rem; position: relative; z-index: 1001; }
         .marquee-text { display: inline-block; white-space: nowrap; animation: marqueeMove 30s linear infinite; }
         @keyframes marqueeMove { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
 
@@ -173,7 +173,7 @@
         <div class="bubble b2"></div>
         <div class="bubble b3"></div>
         <div class="hero-content">
-            <h1 class="welcome-title">Supervisor Portal</h1>
+            <h1 class="welcome-title">Welcome, Supervisor</h1>
             <p class="hero-subtitle">Manage, Review, and Guide your interns efficiently.</p>
         </div>
     </div>
