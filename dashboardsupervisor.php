@@ -1,22 +1,3 @@
-<?php
-session_start();
-// Security: Check if logged in and is a supervisor
-if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'supervisor') {
-    // Jika anda belum set session role, anda boleh buang check role ini buat sementara
-    // header("Location: index.php");
-    // exit();
-}
-
-$conn = new mysqli("localhost", "root", "", "internleave");
-
-// Fetch counts for dashboard stats
-$pending_res = $conn->query("SELECT COUNT(*) as total FROM intern_leave_applications WHERE status='Pending'");
-$pending_count = $pending_res->fetch_assoc()['total'] ?? 0;
-
-$interns_res = $conn->query("SELECT COUNT(DISTINCT student_id) as total FROM intern_leave_applications");
-$intern_count = $interns_res->fetch_assoc()['total'] ?? 0;
-?>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
