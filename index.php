@@ -8,8 +8,12 @@ session_start();
 $conn = new mysqli("localhost", "root", "", "internleave");
 if ($conn->connect_error) { die("Connection failed: " . $conn->connect_error); }
 
+// --- FETCH LECTURERS FOR DROPDOWN ---
+// We fetch this immediately so the dropdown is ready when the page loads
+$lecturer_list = $conn->query("SELECT staff_id, staff_name FROM staffs ORDER BY staff_name ASC");
+
 $message = "";
-$register_success = false; // Flag to check if we should switch to login view
+$register_success = false;
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
@@ -31,6 +35,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $phone = $_POST['phone_no'] ?? '';
                 $email = $_POST['email'] ?? '';
                 $company = $_POST['company_name'] ?? '';
+                
+                // Get the selected Lecturer ID from the dropdown
+                // If they didn't choose one, default to '1' to prevent crash
+                $selected_staff_id = $_POST['selected_lecturer_id'] ?? '1';
 
                 $check = $conn->query("SELECT * FROM students WHERE student_id='$id'");
                 if ($check->num_rows > 0) {
@@ -41,22 +49,19 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     
                     if ($conn->query($sql) === TRUE) {
                         
-                        // --- FIX START: Create Default Staff/Supervisor if missing to prevent Crash ---
-                        $conn->query("INSERT IGNORE INTO staffs (staff_id, staff_name, email, password) VALUES ('1', 'Default Staff', 'admin@uitm.edu.my', '123')");
+                        // Ensure Default Supervisor exists (Logic kept as requested)
                         $conn->query("INSERT IGNORE INTO industry_supervisors (supervisor_id, supervisor_name, company_name, email, password) VALUES (1, 'Default Supervisor', 'Pending', 'admin@company.com', '123')");
-                        // --- FIX END ---
 
-                        // Create Placement
+                        // Create Placement using the SELECTED Lecturer ID
                         $place_sql = "INSERT INTO internship_placements 
                                       (student_id, company_name, supervisor_id, staff_id, start_date, end_date) 
-                                      VALUES ('$id', '$company', 1, '1', CURDATE(), CURDATE())";
+                                      VALUES ('$id', '$company', 1, '$selected_staff_id', CURDATE(), CURDATE())";
                         
                         if($conn->query($place_sql)) {
                             $message = "<div class='alert success'>✅ Account Created! Please Login.</div>";
-                            $register_success = true; // Trigger JS to switch tabs
+                            $register_success = true; 
                         } else {
-                            // Rollback: Delete student if placement fails to avoid broken accounts
-                            $conn->query("DELETE FROM students WHERE student_id='$id'");
+                            $conn->query("DELETE FROM students WHERE student_id='$id'"); // Rollback
                             $message = "<div class='alert error'>System Error: " . $conn->error . "</div>";
                         }
                     } else {
@@ -65,7 +70,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 }
             }
 
-            // B. STAFF REGISTRATION
+            // B. STAFF (LECTURER) REGISTRATION
             elseif ($role == 'staff') {
                 $id = $_POST['staff_id'] ?? '';
                 $name = $_POST['staff_name'] ?? '';
@@ -74,7 +79,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
                 $check = $conn->query("SELECT * FROM staffs WHERE staff_id='$id'");
                 if ($check->num_rows > 0) {
-                    $message = "<div class='alert error'>Staff ID already exists.</div>";
+                    $message = "<div class='alert error'>Lecturer ID already exists.</div>";
                 } else {
                     $sql = "INSERT INTO staffs (staff_id, staff_name, phone_no, email, password)
                             VALUES ('$id', '$name', '$phone', '$email', '$pass')";
@@ -117,7 +122,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $id = $_POST['login_id'] ?? '';
         $pass = $_POST['password'] ?? '';
 
-        // 1. STUDENT LOGIN
         if ($role == 'student') {
             $result = $conn->query("SELECT * FROM students WHERE student_id='$id' AND password='$pass'");
             if ($result && $result->num_rows > 0) {
@@ -129,8 +133,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $message = "<div class='alert error'>Invalid Student ID or Password.</div>";
             }
         }
-
-        // 2. STAFF LOGIN
         elseif ($role == 'staff') {
             $result = $conn->query("SELECT * FROM staffs WHERE staff_id='$id' AND password='$pass'");
             if ($result && $result->num_rows > 0) {
@@ -139,11 +141,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 header("Location: dashboardstaff.php");
                 exit();
             } else {
-                $message = "<div class='alert error'>Invalid Staff ID or Password.</div>";
+                $message = "<div class='alert error'>Invalid Lecturer ID or Password.</div>";
             }
         }
-
-        // 3. SUPERVISOR LOGIN
         elseif ($role == 'supervisor') {
             $result = $conn->query("SELECT * FROM industry_supervisors WHERE supervisor_id='$id' AND password='$pass'");
             if ($result && $result->num_rows > 0) {
@@ -282,7 +282,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 <label>I am a...</label>
                 <select name="login_role" required>
                     <option value="student">Student</option>
-                    <option value="staff">University Staff</option>
+                    <option value="staff">University Lecturer</option>
                     <option value="supervisor">Industry Supervisor</option>
                 </select>
             </div>
@@ -297,7 +297,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 <label>Register As</label>
                 <select name="reg_role" id="regRoleSelect" onchange="updateRegisterForm()" required>
                     <option value="student">Student</option>
-                    <option value="staff">University Staff</option>
+                    <option value="staff">University Lecturer</option>
                     <option value="supervisor">Industry Supervisor</option>
                 </select>
             </div>
@@ -312,11 +312,28 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 <div class="form-group"><label>Phone</label><input type="text" name="phone_no"></div>
                 <div class="form-group"><label>Email</label><input type="email" name="email"></div>
                 <div class="form-group"><label>Company Name</label><input type="text" name="company_name"></div>
+                
+                <div class="form-group">
+                    <label>Select Lecturer</label>
+                    <select name="selected_lecturer_id">
+                        <option value="">-- Choose Lecturer --</option>
+                        <?php 
+                        if ($lecturer_list->num_rows > 0) {
+                            // Loop through the database results to create options
+                            while($lecturer = $lecturer_list->fetch_assoc()) {
+                                echo "<option value='" . $lecturer['staff_id'] . "'>" . $lecturer['staff_name'] . "</option>";
+                            }
+                        }
+                        ?>
+                    </select>
+                </div>
+
+                <div class="form-group"><label>Supervisor Name</label><input type="text" name="supervisor_name_input" placeholder="Name of Supervisor"></div>
             </div>
 
             <div id="staffFields" class="role-section">
-                <div class="form-group"><label>Staff ID</label><input type="text" name="staff_id"></div>
-                <div class="form-group"><label>Full Name</label><input type="text" name="staff_name"></div>
+                <div class="form-group"><label>Lecturer ID</label><input type="text" name="staff_id"></div>
+                <div class="form-group"><label>Lecturer Full Name</label><input type="text" name="staff_name"></div>
                 <div class="form-group"><label>Phone</label><input type="text" name="staff_phone"></div>
                 <div class="form-group"><label>Email</label><input type="email" name="staff_email"></div>
             </div>
