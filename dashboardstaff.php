@@ -62,10 +62,10 @@
         .logout-link { background: #ffeded !important; color: #ff6b6b !important; font-weight: 700 !important; border: 1px solid #ffcccc; cursor: pointer; }
         .logout-link:hover { background: #ff6b6b !important; color: white !important; }
 
-        /* --- HERO BANNER (ADDED BACK) --- */
+        /* --- HERO BANNER --- */
         .hero-banner {
             width: 100%;
-            height: 400px; /* Slightly shorter for dashboard feel */
+            height: 400px;
             background: linear-gradient(135deg, var(--pastel-green-main) 0%, var(--pastel-green-light) 100%);
             display: flex;
             align-items: center;
@@ -75,7 +75,6 @@
             margin-bottom: 40px;
         }
 
-        /* Abstract Floating Shapes */
         .bubble { position: absolute; border-radius: 50%; background: rgba(255,255,255,0.4); animation: float 6s infinite ease-in-out; }
         .b1 { width: 120px; height: 120px; top: 15%; left: 10%; }
         .b2 { width: 180px; height: 180px; bottom: 10%; right: 10%; animation-delay: 2s; }
@@ -84,7 +83,6 @@
 
         .hero-content { position: relative; z-index: 10; text-align: center; }
 
-        /* RGB Gradient Font for Hero Title */
         .welcome-title {
             font-size: 4.5rem;
             font-weight: 700;
@@ -182,7 +180,9 @@
         <div class="nav-links">
             <a href="dashboardstaff.php" class="active">Dashboard</a>
             <a href="studentlist.php">Student List</a>
-            <a href="staffsetting.php">Settings</a>
+            
+            <a href="profilesettingstaff.php">Settings</a>
+            
             <a class="logout-link" onclick="openLogout()">Logout</a>
         </div>
     </nav>
@@ -292,7 +292,7 @@
                 <a href="#" class="action-btn">
                     <i class="fas fa-user-plus"></i> Add New Student
                 </a>
-                <a href="staffsetting.php" class="action-btn">
+                <a href="profilesettingstaff.php" class="action-btn">
                     <i class="fas fa-cog"></i> System Settings
                 </a>
             </div>
