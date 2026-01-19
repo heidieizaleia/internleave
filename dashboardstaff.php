@@ -181,7 +181,7 @@
             <a href="dashboardstaff.php" class="active">Dashboard</a>
             <a href="studentlist.php">Student List</a>
             
-            <a href="profilesetting.php">Settings</a>
+            <a href="profilesettingstaff.php">Settings</a>
             
             <a class="logout-link" onclick="openLogout()">Logout</a>
         </div>
@@ -292,7 +292,7 @@
                 <a href="#" class="action-btn">
                     <i class="fas fa-user-plus"></i> Add New Student
                 </a>
-                <a href="profilesetting.php" class="action-btn">
+                <a href="profilesettingstaff.php" class="action-btn">
                     <i class="fas fa-cog"></i> System Settings
                 </a>
             </div>

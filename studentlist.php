@@ -211,7 +211,7 @@ if (isset($_GET['view_id'])) {
         <div class="nav-links">
             <a href="dashboardstaff.php">Dashboard</a>
             <a href="studentlist.php" class="active">Student List</a>
-            <a href="staffsetting.php">Settings</a>
+            <a href="profilesettingstaff.php">Settings</a>
             <a class="logout-link" onclick="window.location.href='index.php'">Logout</a>
         </div>
     </nav>
