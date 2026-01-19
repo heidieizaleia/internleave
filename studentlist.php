@@ -24,20 +24,51 @@ if (isset($_POST['add_student'])) {
     $email = $_POST['s_email'];
     $company = $_POST['s_company'];
 
-    // 1. Add to Students Table
     $sql = "INSERT INTO students (student_id, full_name, programme_code, year_semester, phone_no, email) 
             VALUES ('$id', '$name', '$prog', '$sem', '$phone', '$email')";
     
     if ($conn->query($sql)) {
-        // 2. Add Dummy Placement (to store Company Name)
-        // We link them to the current logged-in Staff ID
         $sql_place = "INSERT INTO internship_placements (student_id, staff_id, company_name, supervisor_id, start_date, end_date) 
                       VALUES ('$id', '$staff_id', '$company', 1, '2024-03-01', '2024-08-01')";
         $conn->query($sql_place);
-        
         echo "<script>alert('✅ Student Added Successfully!'); window.location.href='studentlist.php';</script>";
     } else {
         echo "<script>alert('Error: ID already exists.');</script>";
+    }
+}
+
+// --- HANDLE UPDATE STUDENT (FIXED FOR ID EDIT) ---
+if (isset($_POST['update_student'])) {
+    $original_id = $_POST['original_id']; // OLD ID
+    $new_id = $_POST['edit_id'];          // NEW ID
+    $name = $_POST['edit_name'];
+    $prog = $_POST['edit_prog'];
+    $sem = $_POST['edit_sem'];
+    $phone = $_POST['edit_phone'];
+    $email = $_POST['edit_email'];
+    $company = $_POST['edit_company'];
+
+    // 1. DISABLE FOREIGN KEY CHECKS (Allows us to edit the ID)
+    $conn->query("SET FOREIGN_KEY_CHECKS=0");
+
+    // 2. Update Student Table (Parent)
+    $up_sql = "UPDATE students SET student_id='$new_id', full_name='$name', programme_code='$prog', year_semester='$sem', phone_no='$phone', email='$email' WHERE student_id='$original_id'";
+    
+    if ($conn->query($up_sql)) {
+        // 3. Update Placements Table (Child) - Link to new ID
+        $conn->query("UPDATE internship_placements SET student_id='$new_id', company_name='$company' WHERE student_id='$original_id'");
+        
+        // 4. Update Leave History (Child) - Ensure history moves to new ID
+        $conn->query("UPDATE intern_leave_applications SET student_id='$new_id' WHERE student_id='$original_id'");
+
+        // 5. RE-ENABLE FOREIGN KEY CHECKS
+        $conn->query("SET FOREIGN_KEY_CHECKS=1");
+
+        echo "<script>alert('✅ Student Updated Successfully!'); window.location.href='studentlist.php';</script>";
+    } else {
+        // Re-enable even if error
+        $conn->query("SET FOREIGN_KEY_CHECKS=1");
+        echo "<script>alert('Error updating student: " . $conn->error . "');</script>";
     }
 }
 
@@ -51,31 +82,35 @@ if (isset($_GET['delete_id'])) {
 }
 
 // --- FETCH STUDENTS LIST ---
-// We join with placements to get the Company Name
 $sql_list = "SELECT s.*, p.company_name 
              FROM students s 
              LEFT JOIN internship_placements p ON s.student_id = p.student_id 
              ORDER BY s.full_name ASC";
 $students_res = $conn->query($sql_list);
 
-// --- HANDLE VIEW DETAILS (POPUP DATA) ---
+// --- HANDLE MODALS (VIEW & EDIT) ---
 $view_student = null;
 $view_history = null;
-$show_modal = false;
+$edit_student = null;
+$show_view_modal = false;
+$show_edit_modal = false;
 
+// View Logic
 if (isset($_GET['view_id'])) {
     $vid = $_GET['view_id'];
-    $show_modal = true;
-
-    // 1. Get Profile
-    $v_sql = "SELECT s.*, p.company_name FROM students s 
-              LEFT JOIN internship_placements p ON s.student_id = p.student_id 
-              WHERE s.student_id = '$vid'";
+    $show_view_modal = true;
+    $v_sql = "SELECT s.*, p.company_name FROM students s LEFT JOIN internship_placements p ON s.student_id = p.student_id WHERE s.student_id = '$vid'";
     $view_student = $conn->query($v_sql)->fetch_assoc();
-
-    // 2. Get History
     $h_sql = "SELECT * FROM intern_leave_applications WHERE student_id = '$vid' ORDER BY start_date DESC";
     $view_history = $conn->query($h_sql);
+}
+
+// Edit Logic
+if (isset($_GET['edit_id'])) {
+    $eid = $_GET['edit_id'];
+    $show_edit_modal = true;
+    $e_sql = "SELECT s.*, p.company_name FROM students s LEFT JOIN internship_placements p ON s.student_id = p.student_id WHERE s.student_id = '$eid'";
+    $edit_student = $conn->query($e_sql)->fetch_assoc();
 }
 ?>
 
@@ -100,100 +135,59 @@ if (isset($_GET['view_id'])) {
     </script>
 
     <style>
-        :root {
-            --pastel-green-light: #f1f8f6;
-            --pastel-green-main: #a7d7c5;
-            --pastel-green-dark: #5c8d89;
-            --white: #ffffff;
-            --text-dark: #2d3436;
-            --soft-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
-            --card-bg: #ffffff;
-            --border-color: #eee;
-        }
-
-        [data-theme="dark"] {
-            --pastel-green-light: #1a1f1e;
-            --white: #252b2a;
-            --text-dark: #e1f2eb;
-            --soft-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-            --card-bg: #252b2a;
-            --border-color: #3a4240;
-        }
-
+        /* [Styles kept exactly as is] */
+        :root { --pastel-green-light: #f1f8f6; --pastel-green-main: #a7d7c5; --pastel-green-dark: #5c8d89; --white: #ffffff; --text-dark: #2d3436; --soft-shadow: 0 10px 30px rgba(0, 0, 0, 0.05); --card-bg: #ffffff; --border-color: #eee; }
+        [data-theme="dark"] { --pastel-green-light: #1a1f1e; --white: #252b2a; --text-dark: #e1f2eb; --soft-shadow: 0 10px 30px rgba(0, 0, 0, 0.2); --card-bg: #252b2a; --border-color: #3a4240; }
         * { box-sizing: border-box; font-family: 'Quicksand', sans-serif; transition: all 0.3s ease; }
         body { margin: 0; padding: 0; background-color: var(--pastel-green-light); color: var(--text-dark); overflow-x: hidden; }
-
-        /* MARQUEE */
         .marquee-container { background: var(--pastel-green-dark); color: white; padding: 12px 0; font-weight: 600; font-size: 0.9rem; }
         .marquee-text { display: inline-block; white-space: nowrap; animation: marqueeMove 30s linear infinite; }
         @keyframes marqueeMove { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
-
-        /* NAV */
         nav { background: var(--white); padding: 15px 40px; display: flex; justify-content: space-between; align-items: center; box-shadow: var(--soft-shadow); position: sticky; top: 0; z-index: 1000; }
         .logo-text { font-size: 2.4rem; font-weight: 700; letter-spacing: -2px; text-decoration: none; color: var(--text-dark); }
         .logo-text .intern { color: var(--pastel-green-dark); }
         .logo-text .leave { color: var(--pastel-green-main); font-weight: 300; }
-
         .nav-links a { text-decoration: none; color: #888; font-weight: 600; font-size: 0.8rem; padding: 10px 14px; border-radius: 12px; }
         .nav-links a:hover, .nav-links a.active { background: #e1f2eb; color: var(--pastel-green-dark); }
         [data-theme="dark"] .nav-links a:hover, [data-theme="dark"] .nav-links a.active { background: rgba(255,255,255,0.1); }
         .logout-link { background: #ffeded !important; color: #ff6b6b !important; border: 1px solid #ffcccc; cursor: pointer; }
-
-        /* LAYOUT */
         .container { max-width: 1200px; margin: 40px auto; padding: 0 20px; }
-
         .header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
         .header-row h1 { margin: 0; font-size: 1.8rem; color: var(--text-dark); }
         .btn-add { background: var(--pastel-green-dark); color: white; padding: 12px 25px; border-radius: 30px; text-decoration: none; font-weight: 700; border: none; cursor: pointer; display: flex; align-items: center; gap: 8px; }
         .btn-add:hover { transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
-
-        /* TABLE CARD */
         .table-card { background: var(--card-bg); padding: 30px; border-radius: 25px; box-shadow: var(--soft-shadow); overflow-x: auto; }
-        
         table { width: 100%; border-collapse: collapse; min-width: 800px; }
         th { text-align: left; padding: 15px; color: #888; font-size: 0.85rem; font-weight: 700; border-bottom: 2px solid var(--border-color); text-transform: uppercase; }
         td { padding: 15px; border-bottom: 1px solid var(--border-color); color: var(--text-dark); font-size: 0.95rem; vertical-align: middle; }
         tr:last-child td { border-bottom: none; }
         tr:hover { background: rgba(0,0,0,0.02); }
-
         .student-link { font-weight: 700; color: var(--pastel-green-dark); text-decoration: none; cursor: pointer; }
         .student-link:hover { text-decoration: underline; }
-
         .actions a { color: #888; margin: 0 5px; font-size: 1rem; transition: 0.2s; }
         .actions a:hover { color: var(--pastel-green-dark); }
         .actions a.del:hover { color: #ff6b6b; }
-
-        /* MODAL STYLES */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); display: none; justify-content: center; align-items: center; z-index: 2000; }
         .modal-box { background: var(--card-bg); padding: 40px; border-radius: 25px; width: 90%; max-width: 600px; max-height: 90vh; overflow-y: auto; position: relative; animation: popIn 0.3s ease-out; box-shadow: 0 20px 60px rgba(0,0,0,0.2); }
         @keyframes popIn { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-
         .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; }
         .modal-header h2 { margin: 0; color: var(--text-dark); }
         .close-btn { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #888; }
-
-        /* PROFILE VIEW STYLES */
         .profile-view { display: flex; gap: 20px; margin-bottom: 30px; }
         .pv-avatar { width: 80px; height: 80px; background: #e1f2eb; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2rem; color: var(--pastel-green-dark); }
         .pv-info h3 { margin: 0 0 5px; color: var(--text-dark); }
         .pv-info p { margin: 2px 0; font-size: 0.9rem; color: #666; }
-
         .history-table th { background: #f9f9f9; padding: 10px; font-size: 0.75rem; }
         [data-theme="dark"] .history-table th { background: #333; }
         .history-table td { padding: 10px; font-size: 0.85rem; }
-        
-        /* FORM STYLES */
         .form-group { margin-bottom: 15px; }
         .form-group label { display: block; margin-bottom: 5px; font-weight: 700; font-size: 0.85rem; color: #666; }
         .form-group input { width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 10px; background: var(--card-bg); color: var(--text-dark); outline: none; }
         .btn-save { width: 100%; background: var(--pastel-green-dark); color: white; padding: 12px; border: none; border-radius: 10px; font-weight: 700; cursor: pointer; margin-top: 10px; }
-
-        /* BADGES */
         .status-badge { padding: 4px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 700; }
         .st-Approved { background: #ecfdf5; color: #047857; }
         .st-Pending { background: #fff7ed; color: #c2410c; }
         .st-Rejected { background: #fef2f2; color: #b91c1c; }
-
         footer { background: var(--white); padding: 40px 20px; text-align: center; border-top: 1px solid var(--border-color); margin-top: 60px; }
         .footer-links a { color: #888; text-decoration: none; margin: 0 10px; font-size: 0.9rem; }
     </style>
@@ -254,7 +248,9 @@ if (isset($_GET['view_id'])) {
                                     <?php echo $row['company_name'] ? $row['company_name'] : '<span style="color:#ccc;">Not Assigned</span>'; ?>
                                 </td>
                                 <td class="actions">
-                                    <a href="#" title="Edit"><i class="fas fa-edit"></i></a>
+                                    <a href="studentlist.php?edit_id=<?php echo $row['student_id']; ?>" title="Edit">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
                                     <a href="studentlist.php?delete_id=<?php echo $row['student_id']; ?>" class="del" title="Delete" onclick="return confirm('Are you sure? This will delete the student and all records.')">
                                         <i class="fas fa-trash"></i>
                                     </a>
@@ -294,7 +290,40 @@ if (isset($_GET['view_id'])) {
         </div>
     </div>
 
-    <?php if ($show_modal && $view_student): ?>
+    <?php if ($show_edit_modal && $edit_student): ?>
+    <div class="modal-overlay" id="editModal" style="display:flex;">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h2>Edit Student Details</h2>
+                <button class="close-btn" onclick="window.location.href='studentlist.php'">&times;</button>
+            </div>
+            <form method="POST">
+                <input type="hidden" name="update_student" value="1">
+                <input type="hidden" name="original_id" value="<?php echo $edit_student['student_id']; ?>">
+                
+                <div class="form-group">
+                    <label>Student ID</label>
+                    <input type="text" name="edit_id" value="<?php echo $edit_student['student_id']; ?>" required>
+                </div>
+
+                <div class="form-group"><label>Full Name</label><input type="text" name="edit_name" value="<?php echo $edit_student['full_name']; ?>" required></div>
+                
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px;">
+                    <div class="form-group"><label>Program</label><input type="text" name="edit_prog" value="<?php echo $edit_student['programme_code']; ?>" required></div>
+                    <div class="form-group"><label>Semester</label><input type="text" name="edit_sem" value="<?php echo $edit_student['year_semester']; ?>" required></div>
+                </div>
+
+                <div class="form-group"><label>Email</label><input type="email" name="edit_email" value="<?php echo $edit_student['email']; ?>" required></div>
+                <div class="form-group"><label>Phone</label><input type="text" name="edit_phone" value="<?php echo $edit_student['phone_no']; ?>" required></div>
+                <div class="form-group"><label>Company Name</label><input type="text" name="edit_company" value="<?php echo $edit_student['company_name']; ?>" required></div>
+                
+                <button type="submit" class="btn-save">Update Changes</button>
+            </form>
+        </div>
+    </div>
+    <?php endif; ?>
+
+    <?php if ($show_view_modal && $view_student): ?>
     <div class="modal-overlay" id="viewModal" style="display:flex;">
         <div class="modal-box">
             <div class="modal-header">
@@ -358,12 +387,10 @@ if (isset($_GET['view_id'])) {
         function openModal(id) { document.getElementById(id).style.display = 'flex'; }
         function closeModal(id) { document.getElementById(id).style.display = 'none'; }
         
-        // Close modal when clicking outside
         window.onclick = function(e) {
             if(e.target.classList.contains('modal-overlay')) {
                 e.target.style.display = 'none';
-                // If it was the view modal, clear the URL param
-                if(e.target.id === 'viewModal') window.location.href = 'studentlist.php';
+                if(e.target.id === 'viewModal' || e.target.id === 'editModal') window.location.href = 'studentlist.php';
             }
         }
     </script>
