@@ -207,10 +207,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             </div>
             <?php if(isset($message)) echo $message; ?>
             <form id="leaveForm" action="" method="POST" enctype="multipart/form-data">
-                <div class="row">
-                    <div class="col form-group"><label>Student ID (Locked)</label><input type="text" value="<?php echo $student_id; ?>" readonly></div>
-                    <div class="col form-group"><label>Faculty Supervisor (Optional)</label><input type="text" name="faculty_supervisor" placeholder="Enter Name if known"></div>
+                
+                <div class="form-group">
+                    <label>Student ID (Locked)</label>
+                    <input type="text" value="<?php echo $student_id; ?>" readonly>
                 </div>
+                
                 <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
                 <div class="form-group">
                     <label>Leave Category</label>
