@@ -10,7 +10,7 @@ if (!isset($_SESSION['user_id'])) {
     exit();
 }
 
-$staff_id = $_SESSION['user_id'];
+$supervisor_id = $_SESSION['user_id'];
 $conn = new mysqli("localhost", "root", "", "internleave");
 if ($conn->connect_error) { die("Connection failed: " . $conn->connect_error); }
 
@@ -22,24 +22,24 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $phone = $conn->real_escape_string($_POST['phone']);
     $email = $conn->real_escape_string($_POST['email']); 
 
-    // Update 'staffs' table (Note: Ensure your DB uses 'staffs' for supervisors as well)
-    $sql_update = "UPDATE staffs SET staff_name='$name', phone_no='$phone', email='$email' WHERE staff_id='$staff_id'";
+    // Update 'industry_supervisors' table
+    $sql_update = "UPDATE industry_supervisors SET supervisor_name='$name', phone_no='$phone', email='$email' WHERE supervisor_id='$supervisor_id'";
     $conn->query($sql_update);
 
     // B. Handle Image Upload
     if (isset($_FILES['profile_pic']) && $_FILES['profile_pic']['error'] == 0) {
-        $target_dir = "uploads/staff_profiles/";
+        $target_dir = "uploads/supervisor_profiles/";
         if (!is_dir($target_dir)) { mkdir($target_dir, 0777, true); }
 
         $file_ext = strtolower(pathinfo($_FILES["profile_pic"]["name"], PATHINFO_EXTENSION));
-        $new_filename = "supervisor_" . $staff_id . "_" . time() . "." . $file_ext;
+        $new_filename = "supervisor_" . $supervisor_id . "_" . time() . "." . $file_ext;
         $target_file = $target_dir . $new_filename;
 
         $allowed = ['jpg', 'jpeg', 'png', 'gif'];
 
         if (in_array($file_ext, $allowed)) {
             if (move_uploaded_file($_FILES["profile_pic"]["tmp_name"], $target_file)) {
-                $conn->query("UPDATE staffs SET profile_image='$target_file' WHERE staff_id='$staff_id'");
+                $conn->query("UPDATE industry_supervisors SET profile_image='$target_file' WHERE supervisor_id='$supervisor_id'");
             }
         }
     }
@@ -50,15 +50,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 }
 
 // 3. FETCH CURRENT DETAILS
-$sql = "SELECT * FROM staffs WHERE staff_id = '$staff_id'";
+$sql = "SELECT * FROM industry_supervisors WHERE supervisor_id = '$supervisor_id'";
 $result = $conn->query($sql);
 $user = $result->fetch_assoc();
 
 // Prepare Data for Display
-$full_name = $user['staff_name'] ?? 'Supervisor Member';
+$full_name = $user['supervisor_name'] ?? 'Supervisor Member';
 $email = $user['email'] ?? '';
 $phone = $user['phone_no'] ?? '';
-$profile_img = $user['profile_image']; 
+// FIX: Added '??' check to prevent "Undefined array key" warning
+$profile_img = $user['profile_image'] ?? ''; 
 ?>
 
 <!DOCTYPE html>
@@ -219,7 +220,7 @@ $profile_img = $user['profile_image'];
                 <h2><?php echo $full_name; ?></h2>
                 <p>Industry Supervisor</p>
             </div>
-            <div class="info-row"><label>Supervisor ID</label><span><?php echo $staff_id; ?></span></div>
+            <div class="info-row"><label>Supervisor ID</label><span><?php echo $supervisor_id; ?></span></div>
             <div class="info-row"><label>Role</label><span>Industry Partner</span></div>
             <div class="info-row"><label>Email</label><span style="font-size:0.85rem;"><?php echo $email; ?></span></div>
         </div>
@@ -257,7 +258,7 @@ $profile_img = $user['profile_image'];
 
                     <div class="form-group">
                         <label>Supervisor ID (Locked)</label>
-                        <input type="text" value="<?php echo $staff_id; ?>" readonly style="cursor:not-allowed; opacity:0.7;">
+                        <input type="text" value="<?php echo $supervisor_id; ?>" readonly style="cursor:not-allowed; opacity:0.7;">
                     </div>
 
                     <button type="submit" class="btn btn-primary">Save Changes</button>
