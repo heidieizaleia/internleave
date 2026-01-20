@@ -77,9 +77,39 @@ if (isset($_GET['view_id'])) {
     <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            const savedColor = localStorage.getItem('accentColor');
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            if (savedColor) {
+                document.documentElement.style.setProperty('--pastel-green-dark', savedColor);
+                document.documentElement.style.setProperty('--pastel-green-main', savedColor); 
+            }
+        })();
+    </script>
+
     <style>
-        :root { --pastel-green-light: #f1f8f6; --pastel-green-main: #a7d7c5; --pastel-green-dark: #5c8d89; --white: #ffffff; --text-dark: #2d3436; --soft-shadow: 0 10px 30px rgba(0, 0, 0, 0.05); --card-bg: #ffffff; --border-color: #eee; }
-        [data-theme="dark"] { --pastel-green-light: #1a1f1e; --white: #252b2a; --text-dark: #e1f2eb; --card-bg: #252b2a; --border-color: #3a4240; }
+        /* UPDATED: Consistent CSS Variables */
+        :root { 
+            --pastel-green-light: #f1f8f6; 
+            --pastel-green-main: #a7d7c5; 
+            --pastel-green-dark: #5c8d89; 
+            --white: #ffffff; 
+            --text-dark: #2d3436; 
+            --soft-shadow: 0 10px 30px rgba(0, 0, 0, 0.05); 
+            --card-bg: #ffffff; 
+            --border-color: #eee; 
+        }
+        
+        [data-theme="dark"] { 
+            --pastel-green-light: #1a1f1e; 
+            --white: #252b2a; 
+            --text-dark: #e1f2eb; 
+            --soft-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            --card-bg: #252b2a; 
+            --border-color: #3a4240; 
+        }
         
         * { box-sizing: border-box; font-family: 'Quicksand', sans-serif; transition: all 0.3s ease; }
         body { margin: 0; padding: 0; background-color: var(--pastel-green-light); color: var(--text-dark); }
@@ -102,7 +132,7 @@ if (isset($_GET['view_id'])) {
         .table-card { background: var(--card-bg); padding: 30px; border-radius: 25px; box-shadow: var(--soft-shadow); overflow-x: auto; }
         table { width: 100%; border-collapse: collapse; }
         th { text-align: left; padding: 15px; color: #888; border-bottom: 2px solid var(--border-color); font-size: 0.85rem; }
-        td { padding: 15px; border-bottom: 1px solid var(--border-color); }
+        td { padding: 15px; border-bottom: 1px solid var(--border-color); color: var(--text-dark); }
         
         .student-link { font-weight: 700; color: var(--pastel-green-dark); text-decoration: none; }
         
@@ -115,8 +145,8 @@ if (isset($_GET['view_id'])) {
         .st-Pending { background: #fff7ed; color: #c2410c; }
 
         .form-group { margin-bottom: 15px; }
-        .form-group label { display: block; margin-bottom: 5px; font-weight: 700; font-size: 0.85rem; }
-        .form-group input { width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 10px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: 700; font-size: 0.85rem; color: var(--text-dark); }
+        .form-group input { width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 10px; background: var(--card-bg); color: var(--text-dark); }
         .btn-save { width: 100%; background: var(--pastel-green-dark); color: white; padding: 12px; border: none; border-radius: 10px; font-weight: 700; cursor: pointer; }
     </style>
 </head>
@@ -189,7 +219,7 @@ if (isset($_GET['view_id'])) {
     <div class="modal-overlay" id="addModal">
         <div class="modal-box">
             <button class="close-btn" onclick="document.getElementById('addModal').style.display='none'">&times;</button>
-            <h2>Add & Assign Intern</h2>
+            <h2 style="color:var(--text-dark);">Add & Assign Intern</h2>
             <form method="POST">
                 <input type="hidden" name="add_student" value="1">
                 <div class="form-group"><label>Intern ID</label><input type="text" name="s_id" required></div>
@@ -215,12 +245,12 @@ if (isset($_GET['view_id'])) {
                     <?php echo strtoupper(substr($view_student['full_name'], 0, 1)); ?>
                 </div>
                 <div>
-                    <h2 style="margin:0;"><?php echo $view_student['full_name']; ?></h2>
+                    <h2 style="margin:0; color:var(--text-dark);"><?php echo $view_student['full_name']; ?></h2>
                     <p style="color:#888; margin:0;"><?php echo $view_student['programme_code']; ?></p>
                 </div>
             </div>
             
-            <h3>Leave History</h3>
+            <h3 style="color:var(--text-dark);">Leave History</h3>
             <div style="max-height:250px; overflow-y:auto;">
                 <table style="font-size:0.9rem;">
                     <thead><tr><th>Date</th><th>Type</th><th>Status</th></tr></thead>
