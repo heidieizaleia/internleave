@@ -28,6 +28,7 @@ if (isset($_POST['add_student'])) {
             VALUES ('$id', '$name', '$prog', '$sem', '$phone', '$email')";
     
     if ($conn->query($sql)) {
+        // When adding a student manually here, link them to THIS logged-in staff
         $sql_place = "INSERT INTO internship_placements (student_id, staff_id, company_name, supervisor_id, start_date, end_date) 
                       VALUES ('$id', '$staff_id', '$company', 1, '2024-03-01', '2024-08-01')";
         $conn->query($sql_place);
@@ -81,10 +82,12 @@ if (isset($_GET['delete_id'])) {
     exit();
 }
 
-// --- FETCH STUDENTS LIST ---
+// --- FETCH STUDENTS LIST (FILTERED BY LOGGED-IN STAFF) ---
+// This is the CRITICAL change. Added WHERE p.staff_id = '$staff_id'
 $sql_list = "SELECT s.*, p.company_name 
              FROM students s 
              LEFT JOIN internship_placements p ON s.student_id = p.student_id 
+             WHERE p.staff_id = '$staff_id' 
              ORDER BY s.full_name ASC";
 $students_res = $conn->query($sql_list);
 
@@ -258,7 +261,7 @@ if (isset($_GET['edit_id'])) {
                             </tr>
                         <?php endwhile; ?>
                     <?php else: ?>
-                        <tr><td colspan="5" style="text-align:center; padding:30px; color:#999;">No students found. Add one!</td></tr>
+                        <tr><td colspan="5" style="text-align:center; padding:30px; color:#999;">No students found assigned to you.</td></tr>
                     <?php endif; ?>
                 </tbody>
             </table>
