@@ -1,14 +1,10 @@
 <?php
 // ==========================================
-// BACKEND LOGIC: MANAGE STUDENTS
+// BACKEND LOGIC: MANAGE STUDENTS (FILTERED BY STAFF)
 // ==========================================
 session_start();
 
-// 1. SECURITY CHECK
-if (!isset($_SESSION['user_id'])) {
-    header("Location: index.php");
-    exit();
-}
+if (!isset($_SESSION['user_id'])) { header("Location: index.php"); exit(); }
 
 $staff_id = $_SESSION['user_id'];
 $conn = new mysqli("localhost", "root", "", "internleave");
@@ -28,6 +24,7 @@ if (isset($_POST['add_student'])) {
             VALUES ('$id', '$name', '$prog', '$sem', '$phone', '$email')";
     
     if ($conn->query($sql)) {
+        // Automatically assign to THIS staff member
         $sql_place = "INSERT INTO internship_placements (student_id, staff_id, company_name, supervisor_id, start_date, end_date) 
                       VALUES ('$id', '$staff_id', '$company', 1, '2024-03-01', '2024-08-01')";
         $conn->query($sql_place);
@@ -37,10 +34,10 @@ if (isset($_POST['add_student'])) {
     }
 }
 
-// --- HANDLE UPDATE STUDENT (FIXED FOR ID EDIT) ---
+// --- HANDLE UPDATE STUDENT ---
 if (isset($_POST['update_student'])) {
-    $original_id = $_POST['original_id']; // OLD ID
-    $new_id = $_POST['edit_id'];          // NEW ID
+    $original_id = $_POST['original_id'];
+    $new_id = $_POST['edit_id'];
     $name = $_POST['edit_name'];
     $prog = $_POST['edit_prog'];
     $sem = $_POST['edit_sem'];
@@ -48,25 +45,15 @@ if (isset($_POST['update_student'])) {
     $email = $_POST['edit_email'];
     $company = $_POST['edit_company'];
 
-    // 1. DISABLE FOREIGN KEY CHECKS (Allows us to edit the ID)
     $conn->query("SET FOREIGN_KEY_CHECKS=0");
-
-    // 2. Update Student Table (Parent)
     $up_sql = "UPDATE students SET student_id='$new_id', full_name='$name', programme_code='$prog', year_semester='$sem', phone_no='$phone', email='$email' WHERE student_id='$original_id'";
     
     if ($conn->query($up_sql)) {
-        // 3. Update Placements Table (Child) - Link to new ID
         $conn->query("UPDATE internship_placements SET student_id='$new_id', company_name='$company' WHERE student_id='$original_id'");
-        
-        // 4. Update Leave History (Child) - Ensure history moves to new ID
         $conn->query("UPDATE intern_leave_applications SET student_id='$new_id' WHERE student_id='$original_id'");
-
-        // 5. RE-ENABLE FOREIGN KEY CHECKS
         $conn->query("SET FOREIGN_KEY_CHECKS=1");
-
         echo "<script>alert('✅ Student Updated Successfully!'); window.location.href='studentlist.php';</script>";
     } else {
-        // Re-enable even if error
         $conn->query("SET FOREIGN_KEY_CHECKS=1");
         echo "<script>alert('Error updating student: " . $conn->error . "');</script>";
     }
@@ -81,46 +68,40 @@ if (isset($_GET['delete_id'])) {
     exit();
 }
 
-// --- FETCH STUDENTS LIST (Filtered by Staff ID) ---
+// --- FETCH STUDENTS LIST (FILTERED BY LOGGED-IN STAFF) ---
 $sql_list = "SELECT s.*, p.company_name 
              FROM students s 
              INNER JOIN internship_placements p ON s.student_id = p.student_id 
-             WHERE p.staff_id = '$staff_id'
+             WHERE p.staff_id = '$staff_id' 
              ORDER BY s.full_name ASC";
 $students_res = $conn->query($sql_list);
 
-// --- HANDLE MODALS (VIEW & EDIT) ---
+// --- MODALS ---
 $view_student = null;
 $view_history = null;
 $edit_student = null;
 $show_view_modal = false;
 $show_edit_modal = false;
 
-// View Logic
 if (isset($_GET['view_id'])) {
     $vid = $_GET['view_id'];
     $show_view_modal = true;
-    
-    // Updated Logic for View (Filtered by Staff ID)
+    // Filter view by staff_id to prevent unauthorized viewing
     $v_sql = "SELECT s.*, p.company_name FROM students s 
               JOIN internship_placements p ON s.student_id = p.student_id 
               WHERE s.student_id = '$vid' AND p.staff_id = '$staff_id'";
-              
     $view_student = $conn->query($v_sql)->fetch_assoc();
     $h_sql = "SELECT * FROM intern_leave_applications WHERE student_id = '$vid' ORDER BY start_date DESC";
     $view_history = $conn->query($h_sql);
 }
 
-// Edit Logic
 if (isset($_GET['edit_id'])) {
     $eid = $_GET['edit_id'];
     $show_edit_modal = true;
-    
-    // Updated Logic for Edit (Filtered by Staff ID)
+    // Filter edit by staff_id
     $e_sql = "SELECT s.*, p.company_name FROM students s 
               JOIN internship_placements p ON s.student_id = p.student_id 
               WHERE s.student_id = '$eid' AND p.staff_id = '$staff_id'";
-              
     $edit_student = $conn->query($e_sql)->fetch_assoc();
 }
 ?>
@@ -132,7 +113,6 @@ if (isset($_GET['edit_id'])) {
     <title>Student List | InternLeave Portal</title>
     <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    
     <script>
         (function() {
             const savedTheme = localStorage.getItem('theme') || 'light';
@@ -144,9 +124,7 @@ if (isset($_GET['edit_id'])) {
             }
         })();
     </script>
-
     <style>
-        /* [Styles kept exactly as is] */
         :root { --pastel-green-light: #f1f8f6; --pastel-green-main: #a7d7c5; --pastel-green-dark: #5c8d89; --white: #ffffff; --text-dark: #2d3436; --soft-shadow: 0 10px 30px rgba(0, 0, 0, 0.05); --card-bg: #ffffff; --border-color: #eee; }
         [data-theme="dark"] { --pastel-green-light: #1a1f1e; --white: #252b2a; --text-dark: #e1f2eb; --soft-shadow: 0 10px 30px rgba(0, 0, 0, 0.2); --card-bg: #252b2a; --border-color: #3a4240; }
         * { box-sizing: border-box; font-family: 'Quicksand', sans-serif; transition: all 0.3s ease; }
@@ -204,15 +182,11 @@ if (isset($_GET['edit_id'])) {
     </style>
 </head>
 <body>
-
     <div class="marquee-container">
         <div class="marquee-text"><span>✨ Staff Portal: Manage your students and track their progress.</span></div>
     </div>
-
     <nav>
-        <a href="dashboardstaff.php" class="logo-text">
-            <span class="intern">Intern</span><span class="leave">Leave</span>
-        </a>
+        <a href="dashboardstaff.php" class="logo-text"><span class="intern">Intern</span><span class="leave">Leave</span></a>
         <div class="nav-links">
             <a href="dashboardstaff.php">Dashboard</a>
             <a href="studentlist.php" class="active">Student List</a>
@@ -220,69 +194,38 @@ if (isset($_GET['edit_id'])) {
             <a class="logout-link" onclick="window.location.href='index.php'">Logout</a>
         </div>
     </nav>
-
     <div class="container">
-        
         <div class="header-row">
-            <div>
-                <h1>Student Directory</h1>
-                <p style="color:#888; margin-top:5px;">Manage student profiles and view leave history.</p>
-            </div>
-            <button class="btn-add" onclick="openModal('addModal')">
-                <i class="fas fa-plus"></i> Add Student
-            </button>
+            <div><h1>Student Directory</h1><p style="color:#888; margin-top:5px;">Manage student profiles assigned to you.</p></div>
+            <button class="btn-add" onclick="openModal('addModal')"><i class="fas fa-plus"></i> Add Student</button>
         </div>
-
         <div class="table-card">
             <table>
-                <thead>
-                    <tr>
-                        <th>Student ID</th>
-                        <th>Full Name</th>
-                        <th>Program</th>
-                        <th>Company</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
+                <thead><tr><th>Student ID</th><th>Full Name</th><th>Program</th><th>Company</th><th>Actions</th></tr></thead>
                 <tbody>
                     <?php if ($students_res->num_rows > 0): ?>
                         <?php while($row = $students_res->fetch_assoc()): ?>
                             <tr>
                                 <td>#<?php echo $row['student_id']; ?></td>
-                                <td>
-                                    <a href="studentlist.php?view_id=<?php echo $row['student_id']; ?>" class="student-link">
-                                        <?php echo $row['full_name']; ?>
-                                    </a>
-                                </td>
+                                <td><a href="studentlist.php?view_id=<?php echo $row['student_id']; ?>" class="student-link"><?php echo $row['full_name']; ?></a></td>
                                 <td><?php echo $row['programme_code']; ?></td>
-                                <td>
-                                    <?php echo $row['company_name'] ? $row['company_name'] : '<span style="color:#ccc;">Not Assigned</span>'; ?>
-                                </td>
+                                <td><?php echo $row['company_name'] ? $row['company_name'] : '<span style="color:#ccc;">Not Assigned</span>'; ?></td>
                                 <td class="actions">
-                                    <a href="studentlist.php?edit_id=<?php echo $row['student_id']; ?>" title="Edit">
-                                        <i class="fas fa-edit"></i>
-                                    </a>
-                                    <a href="studentlist.php?delete_id=<?php echo $row['student_id']; ?>" class="del" title="Delete" onclick="return confirm('Are you sure? This will delete the student and all records.')">
-                                        <i class="fas fa-trash"></i>
-                                    </a>
+                                    <a href="studentlist.php?edit_id=<?php echo $row['student_id']; ?>" title="Edit"><i class="fas fa-edit"></i></a>
+                                    <a href="studentlist.php?delete_id=<?php echo $row['student_id']; ?>" class="del" title="Delete" onclick="return confirm('Are you sure?')"><i class="fas fa-trash"></i></a>
                                 </td>
                             </tr>
                         <?php endwhile; ?>
                     <?php else: ?>
-                        <tr><td colspan="5" style="text-align:center; padding:30px; color:#999;">No students found. Add one!</td></tr>
+                        <tr><td colspan="5" style="text-align:center; padding:30px; color:#999;">No students found assigned to you.</td></tr>
                     <?php endif; ?>
                 </tbody>
             </table>
         </div>
-
     </div>
-
     <div class="modal-overlay" id="addModal">
         <div class="modal-box">
-            <div class="modal-header">
-                <h2>Add New Student</h2>
-                <button class="close-btn" onclick="closeModal('addModal')">&times;</button>
-            </div>
+            <div class="modal-header"><h2>Add New Student</h2><button class="close-btn" onclick="closeModal('addModal')">&times;</button></div>
             <form method="POST">
                 <input type="hidden" name="add_student" value="1">
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px;">
@@ -300,48 +243,31 @@ if (isset($_GET['edit_id'])) {
             </form>
         </div>
     </div>
-
     <?php if ($show_edit_modal && $edit_student): ?>
     <div class="modal-overlay" id="editModal" style="display:flex;">
         <div class="modal-box">
-            <div class="modal-header">
-                <h2>Edit Student Details</h2>
-                <button class="close-btn" onclick="window.location.href='studentlist.php'">&times;</button>
-            </div>
+            <div class="modal-header"><h2>Edit Student Details</h2><button class="close-btn" onclick="window.location.href='studentlist.php'">&times;</button></div>
             <form method="POST">
                 <input type="hidden" name="update_student" value="1">
                 <input type="hidden" name="original_id" value="<?php echo $edit_student['student_id']; ?>">
-                
-                <div class="form-group">
-                    <label>Student ID</label>
-                    <input type="text" name="edit_id" value="<?php echo $edit_student['student_id']; ?>" required>
-                </div>
-
+                <div class="form-group"><label>Student ID</label><input type="text" name="edit_id" value="<?php echo $edit_student['student_id']; ?>" required></div>
                 <div class="form-group"><label>Full Name</label><input type="text" name="edit_name" value="<?php echo $edit_student['full_name']; ?>" required></div>
-                
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px;">
                     <div class="form-group"><label>Program</label><input type="text" name="edit_prog" value="<?php echo $edit_student['programme_code']; ?>" required></div>
                     <div class="form-group"><label>Semester</label><input type="text" name="edit_sem" value="<?php echo $edit_student['year_semester']; ?>" required></div>
                 </div>
-
                 <div class="form-group"><label>Email</label><input type="email" name="edit_email" value="<?php echo $edit_student['email']; ?>" required></div>
                 <div class="form-group"><label>Phone</label><input type="text" name="edit_phone" value="<?php echo $edit_student['phone_no']; ?>" required></div>
                 <div class="form-group"><label>Company Name</label><input type="text" name="edit_company" value="<?php echo $edit_student['company_name']; ?>" required></div>
-                
                 <button type="submit" class="btn-save">Update Changes</button>
             </form>
         </div>
     </div>
     <?php endif; ?>
-
     <?php if ($show_view_modal && $view_student): ?>
     <div class="modal-overlay" id="viewModal" style="display:flex;">
         <div class="modal-box">
-            <div class="modal-header">
-                <h2>Student Profile</h2>
-                <button class="close-btn" onclick="window.location.href='studentlist.php'">&times;</button>
-            </div>
-            
+            <div class="modal-header"><h2>Student Profile</h2><button class="close-btn" onclick="window.location.href='studentlist.php'">&times;</button></div>
             <div class="profile-view">
                 <div class="pv-avatar"><i class="fas fa-user"></i></div>
                 <div class="pv-info">
@@ -352,18 +278,10 @@ if (isset($_GET['edit_id'])) {
                     <p><strong>Email:</strong> <?php echo $view_student['email']; ?></p>
                 </div>
             </div>
-
             <h3 style="font-size:1.1rem; color:var(--text-dark); margin-bottom:10px;">Leave History</h3>
             <div style="max-height: 250px; overflow-y: auto;">
                 <table class="history-table">
-                    <thead>
-                        <tr>
-                            <th>Date</th>
-                            <th>Type</th>
-                            <th>Reason</th>
-                            <th>Status</th>
-                        </tr>
-                    </thead>
+                    <thead><tr><th>Date</th><th>Type</th><th>Reason</th><th>Status</th></tr></thead>
                     <tbody>
                         <?php if ($view_history && $view_history->num_rows > 0): ?>
                             <?php while($h = $view_history->fetch_assoc()): ?>
@@ -380,30 +298,14 @@ if (isset($_GET['edit_id'])) {
                     </tbody>
                 </table>
             </div>
-
         </div>
     </div>
     <?php endif; ?>
-
-    <footer>
-        <div class="footer-links">
-            <a href="#">Privacy Policy</a>
-            <a href="#">Terms of Use</a>
-            <a href="#">Support</a>
-        </div>
-        <p>&copy; 2024 InternLeave Portal. All Rights Reserved.</p>
-    </footer>
-
+    <footer><div class="footer-links"><a href="#">Privacy Policy</a><a href="#">Terms of Use</a><a href="#">Support</a></div><p>&copy; 2024 InternLeave Portal. All Rights Reserved.</p></footer>
     <script>
         function openModal(id) { document.getElementById(id).style.display = 'flex'; }
         function closeModal(id) { document.getElementById(id).style.display = 'none'; }
-        
-        window.onclick = function(e) {
-            if(e.target.classList.contains('modal-overlay')) {
-                e.target.style.display = 'none';
-                if(e.target.id === 'viewModal' || e.target.id === 'editModal') window.location.href = 'studentlist.php';
-            }
-        }
+        window.onclick = function(e) { if(e.target.classList.contains('modal-overlay')) { e.target.style.display = 'none'; if(e.target.id === 'viewModal' || e.target.id === 'editModal') window.location.href = 'studentlist.php'; } }
     </script>
 </body>
 </html>

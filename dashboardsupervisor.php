@@ -1,3 +1,44 @@
+<?php
+// ==========================================
+// BACKEND LOGIC: SUPERVISOR DASHBOARD
+// ==========================================
+session_start();
+
+// 1. SECURITY CHECK
+if (!isset($_SESSION['user_id'])) {
+    header("Location: index.php");
+    exit();
+}
+
+$supervisor_id = $_SESSION['user_id'];
+$conn = new mysqli("localhost", "root", "", "internleave");
+if ($conn->connect_error) { die("Connection failed: " . $conn->connect_error); }
+
+// 2. FETCH PENDING APPLICATIONS (Matches approval.php logic)
+$pending_sql = "SELECT a.*, s.full_name 
+                FROM intern_leave_applications a
+                JOIN students s ON a.student_id = s.student_id
+                JOIN internship_placements p ON a.placement_id = p.placement_id
+                WHERE p.supervisor_id = '$supervisor_id' AND a.status = 'Pending'
+                ORDER BY a.submitted_at ASC LIMIT 5"; // Limiting to 5 for dashboard view
+$pending_res = $conn->query($pending_sql);
+
+// 3. FETCH COUNTS FOR KPI CARDS
+// Count Pending
+$count_pending = $conn->query("SELECT COUNT(*) as count FROM intern_leave_applications a 
+                               JOIN internship_placements p ON a.placement_id = p.placement_id 
+                               WHERE p.supervisor_id = '$supervisor_id' AND a.status = 'Pending'")->fetch_assoc()['count'];
+
+// Count Total Interns
+$count_interns = $conn->query("SELECT COUNT(*) as count FROM internship_placements WHERE supervisor_id = '$supervisor_id'")->fetch_assoc()['count'];
+
+// Count Interns Currently on Leave (Approved and today is within range)
+$count_on_leave = $conn->query("SELECT COUNT(*) as count FROM intern_leave_applications a 
+                                JOIN internship_placements p ON a.placement_id = p.placement_id 
+                                WHERE p.supervisor_id = '$supervisor_id' AND a.status = 'Approved' 
+                                AND CURDATE() BETWEEN a.start_date AND a.end_date")->fetch_assoc()['count'];
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -191,21 +232,21 @@
         <div class="kpi-grid">
             <div class="kpi-card kpi-orange">
                 <div class="kpi-content">
-                    <h3>3</h3>
+                    <h3><?php echo $count_pending; ?></h3>
                     <p>Awaiting Approval</p>
                 </div>
                 <i class="fas fa-clock kpi-icon"></i>
             </div>
             <div class="kpi-card kpi-blue">
                 <div class="kpi-content">
-                    <h3>8</h3>
+                    <h3><?php echo $count_interns; ?></h3>
                     <p>My Total Interns</p>
                 </div>
                 <i class="fas fa-users kpi-icon"></i>
             </div>
             <div class="kpi-card kpi-green">
                 <div class="kpi-content">
-                    <h3>1</h3>
+                    <h3><?php echo $count_on_leave; ?></h3>
                     <p>Interns on Leave</p>
                 </div>
                 <i class="fas fa-bed kpi-icon"></i>
@@ -219,31 +260,26 @@
                     <span>Pending Applications</span>
                     <a href="approval.php" style="font-size: 0.8rem; color: var(--pastel-green-dark); text-decoration: none;">View All</a>
                 </div>
+                
                 <ul class="recent-list">
-                    <li class="recent-item">
-                        <div class="user-avatar">AD</div>
-                        <div class="req-info">
-                            <h4>Ahmad Daniel</h4>
-                            <p>Medical Leave • 2 Days</p>
-                        </div>
-                        <span class="req-status status-pending">Needs Decision</span>
-                    </li>
-                    <li class="recent-item">
-                        <div class="user-avatar" style="background:#fef3c7; color:#d97706;">MK</div>
-                        <div class="req-info">
-                            <h4>Michael K.</h4>
-                            <p>Emergency Leave • 3 Days</p>
-                        </div>
-                        <span class="req-status status-pending">Needs Decision</span>
-                    </li>
-                    <li class="recent-item">
-                        <div class="user-avatar" style="background:#e0f2fe; color:#0ea5e9;">SJ</div>
-                        <div class="req-info">
-                            <h4>Sarah Jenkins</h4>
-                            <p>Personal Leave • 1 Day</p>
-                        </div>
-                        <span class="req-status status-approved">Approved</span>
-                    </li>
+                    <?php if ($pending_res->num_rows > 0): ?>
+                        <?php while($row = $pending_res->fetch_assoc()): ?>
+                            <li class="recent-item">
+                                <div class="user-avatar" style="background:#e1f2eb; color:var(--pastel-green-dark);">
+                                    <?php echo strtoupper(substr($row['full_name'], 0, 2)); ?>
+                                </div>
+                                <div class="req-info">
+                                    <h4><?php echo htmlspecialchars($row['full_name']); ?></h4>
+                                    <p><?php echo $row['leave_type']; ?> • <?php echo $row['total_days']; ?> Days</p>
+                                </div>
+                                <span class="req-status status-pending">Needs Decision</span>
+                            </li>
+                        <?php endwhile; ?>
+                    <?php else: ?>
+                        <li class="recent-item" style="justify-content: center; color: #888; font-style: italic;">
+                            There are no current pending approvals.
+                        </li>
+                    <?php endif; ?>
                 </ul>
             </div>
 

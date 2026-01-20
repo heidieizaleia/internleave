@@ -1,3 +1,50 @@
+<?php
+// ==========================================
+// BACKEND LOGIC: STAFF DASHBOARD
+// ==========================================
+session_start();
+
+// 1. SECURITY CHECK
+if (!isset($_SESSION['user_id'])) {
+    header("Location: index.php");
+    exit();
+}
+
+$staff_id = $_SESSION['user_id'];
+$conn = new mysqli("localhost", "root", "", "internleave");
+if ($conn->connect_error) { die("Connection failed: " . $conn->connect_error); }
+
+// 2. FETCH KPI COUNTS (Linked to this Staff ID)
+
+// Count Pending Applications (For students assigned to this staff)
+$pending_sql = "SELECT COUNT(*) as count 
+                FROM intern_leave_applications a
+                JOIN internship_placements p ON a.placement_id = p.placement_id
+                WHERE p.staff_id = '$staff_id' AND a.status = 'Pending'";
+$count_pending = $conn->query($pending_sql)->fetch_assoc()['count'];
+
+// Count Total Students (Assigned to this staff)
+$students_sql = "SELECT COUNT(*) as count FROM internship_placements WHERE staff_id = '$staff_id'";
+$count_students = $conn->query($students_sql)->fetch_assoc()['count'];
+
+// Count Students Currently on Leave
+$on_leave_sql = "SELECT COUNT(*) as count 
+                 FROM intern_leave_applications a
+                 JOIN internship_placements p ON a.placement_id = p.placement_id
+                 WHERE p.staff_id = '$staff_id' AND a.status = 'Approved' 
+                 AND CURDATE() BETWEEN a.start_date AND a.end_date";
+$count_on_leave = $conn->query($on_leave_sql)->fetch_assoc()['count'];
+
+// 3. FETCH RECENT LEAVE REQUESTS
+$recent_sql = "SELECT a.*, s.full_name 
+               FROM intern_leave_applications a
+               JOIN students s ON a.student_id = s.student_id
+               JOIN internship_placements p ON a.placement_id = p.placement_id
+               WHERE p.staff_id = '$staff_id'
+               ORDER BY a.submitted_at DESC LIMIT 5";
+$recent_res = $conn->query($recent_sql);
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -140,8 +187,9 @@
         .req-info p { margin: 3px 0 0; font-size: 0.8rem; color: #888; }
         .req-status { padding: 5px 12px; border-radius: 12px; font-size: 0.75rem; font-weight: 700; white-space: nowrap; }
         
-        .status-pending { background: #fff7ed; color: #c2410c; }
-        .status-approved { background: #ecfdf5; color: #047857; }
+        .status-Pending { background: #fff7ed; color: #c2410c; }
+        .status-Approved { background: #ecfdf5; color: #047857; }
+        .status-Rejected { background: #fef2f2; color: #b91c1c; }
 
         /* Quick Actions */
         .action-btn { display: flex; align-items: center; gap: 15px; width: 100%; padding: 15px; margin-bottom: 10px; background: var(--pastel-green-light); border: none; border-radius: 15px; cursor: pointer; color: var(--text-dark); font-weight: 600; transition: 0.2s; text-decoration: none; }
@@ -210,24 +258,24 @@
         <div class="kpi-grid">
             <div class="kpi-card kpi-orange">
                 <div class="kpi-content">
-                    <h3>5</h3>
+                    <h3><?php echo $count_pending; ?></h3>
                     <p>Pending Approval</p>
                 </div>
                 <i class="fas fa-clock kpi-icon"></i>
             </div>
             <div class="kpi-card kpi-blue">
                 <div class="kpi-content">
-                    <h3>3</h3>
-                    <p>Students on Leave</p>
-                </div>
-                <i class="fas fa-bed kpi-icon"></i>
-            </div>
-            <div class="kpi-card kpi-green">
-                <div class="kpi-content">
-                    <h3>42</h3>
+                    <h3><?php echo $count_students; ?></h3>
                     <p>Total Students</p>
                 </div>
                 <i class="fas fa-users kpi-icon"></i>
+            </div>
+            <div class="kpi-card kpi-green">
+                <div class="kpi-content">
+                    <h3><?php echo $count_on_leave; ?></h3>
+                    <p>Students on Leave</p>
+                </div>
+                <i class="fas fa-bed kpi-icon"></i>
             </div>
             <div class="kpi-card kpi-purple">
                 <div class="kpi-content">
@@ -246,38 +294,24 @@
                     <a href="studentlist.php">View All</a>
                 </div>
                 <ul class="recent-list">
-                    <li class="recent-item">
-                        <div class="user-avatar">AD</div>
-                        <div class="req-info">
-                            <h4>Ahmad Daniel</h4>
-                            <p>Medical Leave • 2 Days</p>
-                        </div>
-                        <span class="req-status status-pending">Pending Review</span>
-                    </li>
-                    <li class="recent-item">
-                        <div class="user-avatar" style="background:#e0f2fe; color:#0ea5e9;">SJ</div>
-                        <div class="req-info">
-                            <h4>Sarah Jenkins</h4>
-                            <p>Personal Leave • 1 Day</p>
-                        </div>
-                        <span class="req-status status-approved">Approved</span>
-                    </li>
-                    <li class="recent-item">
-                        <div class="user-avatar" style="background:#fef3c7; color:#d97706;">MK</div>
-                        <div class="req-info">
-                            <h4>Michael K.</h4>
-                            <p>Emergency Leave • 3 Days</p>
-                        </div>
-                        <span class="req-status status-pending">Pending Review</span>
-                    </li>
-                    <li class="recent-item">
-                        <div class="user-avatar">NL</div>
-                        <div class="req-info">
-                            <h4>Nur Liyana</h4>
-                            <p>Academic Event • 1 Day</p>
-                        </div>
-                        <span class="req-status status-approved">Approved</span>
-                    </li>
+                    <?php if ($recent_res->num_rows > 0): ?>
+                        <?php while($row = $recent_res->fetch_assoc()): ?>
+                            <li class="recent-item">
+                                <div class="user-avatar" style="background:#e1f2eb; color:var(--pastel-green-dark);">
+                                    <?php echo strtoupper(substr($row['full_name'], 0, 2)); ?>
+                                </div>
+                                <div class="req-info">
+                                    <h4><?php echo htmlspecialchars($row['full_name']); ?></h4>
+                                    <p><?php echo $row['leave_type']; ?> • <?php echo $row['total_days']; ?> Days</p>
+                                </div>
+                                <span class="req-status status-<?php echo $row['status']; ?>"><?php echo $row['status']; ?></span>
+                            </li>
+                        <?php endwhile; ?>
+                    <?php else: ?>
+                        <li class="recent-item" style="justify-content: center; color: #888; font-style: italic;">
+                            There are no recent leave requests.
+                        </li>
+                    <?php endif; ?>
                 </ul>
             </div>
 
