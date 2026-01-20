@@ -170,7 +170,7 @@ $result = $conn->query($sql);
 
     <div class="container">
         <div class="page-header">
-            <h1>Application History</h1>
+            <h1>Application Status</h1>
             <a href="apply.php" class="btn-new">+ New Application</a>
         </div>
 
