@@ -305,10 +305,28 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             <div id="studentFields" class="role-section" style="display:block;">
                 <div class="form-group"><label>Student ID</label><input type="text" name="student_id"></div>
                 <div class="form-group"><label>Full Name</label><input type="text" name="full_name"></div>
+                
                 <div style="display:flex; gap:10px;">
-                    <div class="form-group" style="flex:1;"><label>Program</label><input type="text" name="programme_code"></div>
-                    <div class="form-group" style="flex:1;"><label>Semester</label><input type="text" name="year_semester"></div>
+                    <div class="form-group" style="flex:1;">
+                        <label>Program</label>
+                        <select name="programme_code">
+                            <option value="CDIM260">CDIM260</option>
+                            <option value="CDIM261">CDIM261</option>
+                            <option value="CDIM262">CDIM262</option>
+                            <option value="CDIM263">CDIM263</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="flex:1;">
+                        <label>Semester</label>
+                        <select name="year_semester">
+                            <option value="Semester 5">Semester 5</option>
+                            <option value="Semester 6">Semester 6</option>
+                            <option value="Semester 7">Semester 7</option>
+                            <option value="Semester 8">Semester 8</option>
+                        </select>
+                    </div>
                 </div>
+
                 <div class="form-group"><label>Phone</label><input type="text" name="phone_no"></div>
                 <div class="form-group"><label>Email</label><input type="email" name="email"></div>
                 <div class="form-group"><label>Company Name</label><input type="text" name="company_name"></div>
