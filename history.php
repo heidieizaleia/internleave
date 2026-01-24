@@ -66,7 +66,6 @@ $result = $conn->query($history_sql);
             --border-color: #f0f0f0;
         }
 
-        /* DARK MODE OVERRIDES */
         [data-theme="dark"] {
             --pastel-green-light: #1a1f1e;
             --white: #252b2a;
@@ -105,7 +104,7 @@ $result = $conn->query($history_sql);
         .stat-card { background: var(--card-bg); padding: 25px; border-radius: 20px; box-shadow: var(--soft-shadow); display: flex; align-items: center; gap: 20px; }
         
         .stat-icon { width: 60px; height: 60px; border-radius: 50%; background: #e1f2eb; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: var(--pastel-green-dark); }
-        [data-theme="dark"] .stat-icon { background: rgba(92, 141, 137, 0.2); } /* Dark mode icon bg */
+        [data-theme="dark"] .stat-icon { background: rgba(92, 141, 137, 0.2); }
 
         .stat-info h3 { margin: 0; font-size: 2rem; color: var(--text-dark); }
         .stat-info p { margin: 0; color: #888; font-size: 0.9rem; font-weight: 700; text-transform: uppercase; }
@@ -118,7 +117,7 @@ $result = $conn->query($history_sql);
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
         th { text-align: left; padding: 15px; color: #888; font-weight: 700; font-size: 0.85rem; border-bottom: 2px solid var(--border-color); text-transform: uppercase; }
         td { padding: 20px 15px; border-bottom: 1px solid var(--border-color); font-size: 0.95rem; color: #555; vertical-align: middle; }
-        [data-theme="dark"] td { color: #ccc; } /* Lighter text for table rows in dark mode */
+        [data-theme="dark"] td { color: #ccc; }
         
         tr:last-child td { border-bottom: none; }
         tr:hover { background-color: #fcfcfc; }
@@ -150,6 +149,26 @@ $result = $conn->query($history_sql);
         @keyframes popIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
         .btn-yes { background: #ff6b6b; color: white; padding: 12px 30px; border:none; border-radius:10px; font-weight:700; cursor:pointer; margin-left:10px; }
         .btn-no { background: #eee; color: #555; padding: 12px 30px; border:none; border-radius:10px; font-weight:700; cursor:pointer; }
+
+        /* --- PRINT STYLES (MAKES IT LOOK LIKE A PDF) --- */
+        @media print {
+            body { background: white; color: black; }
+            nav, .marquee-container, .stats-row, .panel-header button, .logout-link, .modal-overlay { display: none !important; }
+            .container { margin: 0; padding: 0; max-width: 100%; }
+            .history-panel { box-shadow: none; border: 1px solid #000; border-radius: 0; padding: 20px; }
+            .panel-header h2 { font-size: 24px; text-decoration: underline; text-align: center; margin-bottom: 30px; width: 100%; }
+            .panel-header h2::after { content: " - Student Leave Record Log"; }
+            table { width: 100%; border: 1px solid #000; }
+            th, td { border: 1px solid #000; color: black !important; padding: 10px; }
+            th { background-color: #f0f0f0 !important; -webkit-print-color-adjust: exact; }
+            tr:hover { background: none !important; }
+            .badge { border: 1px solid #000; background: none !important; color: black !important; }
+            /* Add student info header for print */
+            .history-panel::before {
+                content: "Student ID: <?php echo $student_id; ?> | Generated on: " attr(data-date);
+                display: block; margin-bottom: 20px; font-weight: bold;
+            }
+        }
 
         @media (max-width: 768px) {
             .stats-row { grid-template-columns: 1fr; }
@@ -202,7 +221,7 @@ $result = $conn->query($history_sql);
             </div>
         </div>
 
-        <div class="history-panel">
+        <div class="history-panel" data-date="<?php echo date('d/m/Y'); ?>">
             <div class="panel-header">
                 <h2>Leave Record Log</h2>
                 <button onclick="window.print()" style="background:none; border:1px solid #ddd; padding:8px 15px; border-radius:10px; cursor:pointer; color:#666;">
