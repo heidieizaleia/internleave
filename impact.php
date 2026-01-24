@@ -178,6 +178,9 @@ if ($selected_app_id) {
         .border-Meeting { border-top: 5px solid #f59e0b; }
         .border-Task { border-top: 5px solid #3b82f6; }
         .border-Event { border-top: 5px solid #ec4899; }
+        .border-Deadline { border-top: 5px solid #ef4444; }
+        .border-Training { border-top: 5px solid #10b981; }
+        .border-Other { border-top: 5px solid #8b5cf6; }
 
         .icon-circle { 
             width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; 
@@ -186,6 +189,9 @@ if ($selected_app_id) {
         .icon-Meeting { background: #fef3c7; color: #d97706; }
         .icon-Task { background: #dbeafe; color: #2563eb; }
         .icon-Event { background: #fce7f3; color: #db2777; }
+        .icon-Deadline { background: #fee2e2; color: #991b1b; }
+        .icon-Training { background: #d1fae5; color: #065f46; }
+        .icon-Other { background: #f3e8ff; color: #7c3aed; }
 
         .card-title { font-weight: 700; color: var(--text-dark); margin-bottom: 5px; }
         .card-desc { color: #777; font-size: 0.9rem; line-height: 1.5; }
@@ -273,6 +279,9 @@ if ($selected_app_id) {
                         <option value="Meeting">📅 Meeting / Discussion</option>
                         <option value="Task">🔨 Project Task</option>
                         <option value="Event">🚀 Company Event</option>
+                        <option value="Deadline">⚠️ Deadline Submission</option>
+                        <option value="Training">📚 Training / Workshop</option>
+                        <option value="Other">📝 Other</option>
                     </select>
 
                     <label style="font-weight:700; font-size:0.85rem; color:#555;">DETAILS</label>
@@ -306,6 +315,9 @@ if ($selected_app_id) {
                             $icon_class = 'fa-tasks';
                             if($type == 'Meeting') $icon_class = 'fa-users';
                             if($type == 'Event') $icon_class = 'fa-calendar-star';
+                            if($type == 'Deadline') $icon_class = 'fa-exclamation-circle';
+                            if($type == 'Training') $icon_class = 'fa-book-reader';
+                            if($type == 'Other') $icon_class = 'fa-sticky-note';
                         ?>
                             <div class="impact-card border-<?php echo $type; ?>">
                                 <div class="icon-circle icon-<?php echo $type; ?>">
